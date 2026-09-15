@@ -1,3 +1,11 @@
-/*
-!"Week 1"/
+# Ignore everything by default
+*
+
+# Allow Git to traverse into directory structures
+!*/
+
+# Re-include the "Week 1" folder and all its contents
+!"Week 1"/**
+
+# Keep tracking .gitignore
 !.gitignore
