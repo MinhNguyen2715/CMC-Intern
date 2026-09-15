@@ -1,11 +1,22 @@
-# Ignore everything by default
-*
+# --- Specific Folders to Ignore ---
+Demo/
+Tinhtong2so/
 
-# Allow Git to traverse into directory structures
-!*/
+# --- Specific Files & Documents to Ignore ---
+*.xlsx
+*.pdf
+mydata.txt
 
-# Re-include the "Week 1" folder and all its contents
-!"Week 1"/**
-
-# Keep tracking .gitignore
-!.gitignore
+# --- Standard Visual Studio / C++ Build Artifacts to Ignore ---
+.vs/
+*.user
+*.suo
+*.sln.docstates
+Debug/
+Release/
+x64/
+x86/
+*.obj
+*.exe
+*.pdb
+*.log
