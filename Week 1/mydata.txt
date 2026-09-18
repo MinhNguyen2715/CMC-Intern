@@ -1,0 +1,33 @@
+﻿==================================================
+1. VIETNAMESE (Tiếng Việt)
+==================================================
+Xin chào thế giới! Đây là ứng dụng MFC kiểm tra file I/O UTF-8.
+Tất cả các dấu tiếng Việt: á à ả ã ạ / ă ắ ằ ẳ ẵ ặ / ân ấn ần ẩn ẫn ận
+Trời mưa không nắng, ngày mai là thứ năm, không phải đi học.
+
+==================================================
+2. CHINESE (中文 - Simplified & Traditional)
+==================================================
+Simplified: 你好，世界！这是一个 UTF-8 编码测试文件。
+Traditional: 你好，世界！這是一個 UTF-8 編碼測試檔案。
+Phrases: 祝你今天过得愉快！学习 C++ 和 MFC 非常有趣。
+
+==================================================
+3. OTHER ASIAN SCRIPTS (Japanese & Korean)
+==================================================
+Japanese: こんにちは世界！UTF-8の文字コードテストです。
+Korean: 안녕하세요! UTF-8 인코딩 테스트 파일입니다.
+
+==================================================
+4. EUROPEAN ACCENTS & SYMBOLS
+==================================================
+French/Spanish/German: Ångström, Café, Niños, Über, Strassen.
+Symbols & Currency: € £ ¥ $ © ® ™ µ ± ≠ ≤ ≥ ÷ ½ ¼
+
+==================================================
+5. BASIC ASCII & NUMBERS
+==================================================
+Numbers: 0123456789
+Alphabet: ABCDEFGHIJKLMNOPQRSTUVWXYZ
+Path: C:\Users\MinhNguyen\Documents\CMC Training\Week 1\mydata.txt
+=======================================================================

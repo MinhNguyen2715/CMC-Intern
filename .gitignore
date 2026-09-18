@@ -2,21 +2,26 @@
 Demo/
 Tinhtong2so/
 
-# --- Specific Files & Documents to Ignore ---
-*.xlsx
-*.pdf
-mydata.txt
-
-# --- Standard Visual Studio / C++ Build Artifacts to Ignore ---
+# --- IDE & Cache Files ---
 .vs/
-*.user
+*.ipch
+*.VC.db
 *.suo
-*.sln.docstates
+*.user
+*.aps
+
+# --- C++ / Visual Studio Build Outputs ---
 Debug/
 Release/
 x64/
 x86/
+*.pch
 *.obj
 *.exe
+*.dll
 *.pdb
-*.log
+*.ilk
+
+# --- Documents & Spreadsheets ---
+*.xlsx
+*.pdf

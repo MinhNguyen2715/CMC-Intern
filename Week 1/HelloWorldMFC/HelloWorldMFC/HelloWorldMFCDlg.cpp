@@ -124,7 +124,7 @@ void CHelloWorldMFCDlg::OnBnClickedBtnBrowse()
 	if (folderDlg.DoModal() == IDOK) {
 		CString strFolderPath = folderDlg.GetFolderPath();
 
-		// Change text box
+		// Change static text
 		SetDlgItemText(IDC_PATH, strFolderPath);
 
 		// Store path to m_strFolderPath
