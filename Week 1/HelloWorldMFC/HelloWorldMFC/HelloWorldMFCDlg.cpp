@@ -23,6 +23,7 @@ CHelloWorldMFCDlg::CHelloWorldMFCDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_HELLOWORLDMFC_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
 }
 
 void CHelloWorldMFCDlg::DoDataExchange(CDataExchange* pDX)
@@ -132,7 +133,6 @@ void CHelloWorldMFCDlg::OnBnClickedBtnBrowse()
 	}
 }
 
-
 void CHelloWorldMFCDlg::OnBnClickedBtnSave()
 {
 	CString strFolderPath;
@@ -162,10 +162,6 @@ void CHelloWorldMFCDlg::OnBnClickedBtnSave()
 
 	strFilePath.Format(_T("%smydata.txt"), strFolderPath.GetString());
 
-	// Convert CString (UTF-16) -> UTF-8 std::string
-	CT2CA pszUtf8(strFileContent, CP_UTF8);
-	string strUtf8Content(pszUtf8);
-
 	// Alert before overwriting
 	if (PathFileExists(strFilePath))
 	{
@@ -174,25 +170,28 @@ void CHelloWorldMFCDlg::OnBnClickedBtnSave()
 
 		int nResponse = AfxMessageBox(strPrompt, MB_YESNO | MB_ICONQUESTION);
 
-		// No -> cancel
 		if (nResponse == IDNO)
 		{
 			return;
 		}
 	}
 
-	CStdioFile file;
-	CFileException ex;
+	HANDLE hFile = CreateFile(
+		strFilePath.GetString(),                  // File path
+		GENERIC_WRITE,                // Desired access
+		0,                            // Share mode (no sharing)
+		NULL,                         // Security attributes
+		CREATE_ALWAYS,                // Creation disposition (overwrite existing)
+		FILE_ATTRIBUTE_NORMAL,        // Flags and attributes
+		NULL                          // Template file handle
+	);
 
-	if (file.Open(strFilePath, CFile::modeCreate | CFile::modeWrite | CFile::typeText, &ex))
+	if (hFile != INVALID_HANDLE_VALUE)
 	{
-		// Write UTF-8 BOM (Byte Order Mark) -> other apps know the text file is encoded in UTF-8
-		unsigned char bom[] = { 0xEF, 0xBB, 0xBF };
-		file.Write(bom, sizeof(bom));
-
-		// Write the edit control content into the file
-		file.Write(strUtf8Content.c_str(), static_cast<UINT>(strUtf8Content.length()));
-		file.Close();
+		DWORD bytesWritten = 0;
+		DWORD dwBytesToWrite = static_cast<DWORD>(strFileContent.GetLength() * sizeof(wchar_t));
+		WriteFile(hFile, strFileContent.GetString(), dwBytesToWrite, &bytesWritten, NULL);
+		CloseHandle(hFile);
 
 		CString strSuccessMsg;
 		strSuccessMsg.Format(_T("File successfully saved to:\n%s"), strFilePath.GetString());
@@ -200,10 +199,9 @@ void CHelloWorldMFCDlg::OnBnClickedBtnSave()
 	}
 	else
 	{
-		TCHAR szError[1024];
-		ex.GetErrorMessage(szError, 1024);
+		DWORD dwErr = GetLastError();
 		CString strErrMsg;
-		strErrMsg.Format(_T("Failed to create file. Error: %s"), szError);
+		strErrMsg.Format(_T("Failed to create file. Win32 Error Code: %d"), dwErr);
 		AfxMessageBox(strErrMsg, MB_ICONERROR);
 	}
 }
@@ -229,51 +227,69 @@ void CHelloWorldMFCDlg::OnBnClickedBtnLoad()
 	if (fileDlg.DoModal() == IDOK) {
 		CString strSelectedFilePath = fileDlg.GetPathName();
 
-		CStdioFile file;
-		CFileException ex;
+		HANDLE hFile = CreateFile(
+			strSelectedFilePath,          // File path
+			GENERIC_READ,                 // Desired access
+			FILE_SHARE_READ,              // Share mode (allow other processes to read)
+			NULL,                         // Security attributes
+			OPEN_EXISTING,                // Creation disposition
+			FILE_ATTRIBUTE_NORMAL,        // Flags and attributes
+			NULL                          // Template file handle
+		);
 
-		if (file.Open(strSelectedFilePath, CFile::modeRead | CFile::typeText, &ex))
+		if (hFile != INVALID_HANDLE_VALUE)
 		{
-			ULONGLONG dwFileLength = file.GetLength();
-			if (dwFileLength == 0) {
+			LARGE_INTEGER fileSize;
+			if (!GetFileSizeEx(hFile, &fileSize) || fileSize.QuadPart == 0)
+			{
 				SetDlgItemText(IDC_EDIT, _T(""));
-				file.Close();
+				CloseHandle(hFile);
 				return;
 			}
 
-			// Read file
-			vector<char> buffer(static_cast<size_t>(dwFileLength) + 1, 0);
-			file.Read(buffer.data(), static_cast<UINT>(dwFileLength));
-			file.Close();
+			DWORD dwBytesToRead = static_cast<DWORD>(fileSize.QuadPart);
+			HANDLE hHeap = GetProcessHeap();
+			BYTE* pBuffer = static_cast<BYTE*>(HeapAlloc(hHeap, HEAP_ZERO_MEMORY, dwBytesToRead + sizeof(wchar_t)));
 
-			char* pData = buffer.data();
-			size_t dataSize = static_cast<size_t>(dwFileLength);
-
-			// Check and skip UTF-8 BOM if present (0xEF, 0xBB, 0xBF)
-			if (dataSize >= 3 &&
-				(unsigned char)pData[0] == 0xEF &&
-				(unsigned char)pData[1] == 0xBB &&
-				(unsigned char)pData[2] == 0xBF)
+			if (pBuffer == NULL)
 			{
-				pData += 3;
+				CloseHandle(hFile);
+				AfxMessageBox(_T("Failed to allocate heap memory."), MB_ICONERROR);
+				return;
 			}
 
-			// Convert UTF-8 buffer to CString (Unicode)
-			CA2CT pszUnicode(pData, CP_UTF8);
-			CString strFullContent(pszUnicode);
+			DWORD bytesRead = 0;
+			BOOL bSuccess = ReadFile(
+				hFile,
+				pBuffer,
+				dwBytesToRead,
+				&bytesRead,
+				NULL
+			);
 
-			SetDlgItemText(IDC_EDIT, strFullContent);
+			CloseHandle(hFile);
 
-			//CString strSuccessMsg;
-			//strSuccessMsg.Format(_T("Text file loaded successfully from:\n%s"), strSelectedFilePath.GetString());
-			//AfxMessageBox(strSuccessMsg, MB_ICONINFORMATION);
+			if (bSuccess)
+			{
+				const wchar_t* strFullContent = reinterpret_cast<const wchar_t*>(pBuffer);
+				SetDlgItemText(IDC_EDIT, strFullContent);
+			}
+			else
+			{
+				DWORD dwErr = GetLastError();
+				CString strErrMsg;
+				strErrMsg.Format(_T("Failed to read file contents. Win32 Error Code: %d"), dwErr);
+				AfxMessageBox(strErrMsg, MB_ICONERROR);
+			}
+
+			// Free heap buffer
+			HeapFree(hHeap, 0, pBuffer);
 		}
-		else {
-			// Handle file opening errors (e.g., Access Denied)
-			TCHAR szError[1024];
-			ex.GetErrorMessage(szError, 1024);
+		else
+		{
+			DWORD dwErr = GetLastError();
 			CString strErrMsg;
-			strErrMsg.Format(_T("Failed to open text file. Error: %s"), szError);
+			strErrMsg.Format(_T("Failed to open file. Win32 Error Code: %d"), dwErr);
 			AfxMessageBox(strErrMsg, MB_ICONERROR);
 		}
 	}

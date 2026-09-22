@@ -73,6 +73,7 @@ BOOL CHelloWorldMFCApp::InitInstance()
 
 	CHelloWorldMFCDlg dlg;
 	m_pMainWnd = &dlg;
+
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
 	{
