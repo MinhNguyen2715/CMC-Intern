@@ -15,10 +15,10 @@ public:
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_REGISTER };
 #endif
-
+private:
+	CFont m_fontStatic;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedBtnRegReg();

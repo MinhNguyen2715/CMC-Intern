@@ -19,8 +19,9 @@
 #define IDC_EDIT_REG_CONFIRM            1009
 #define ID_BTN_REG_REG                  1010
 #define IDC_EDIT_LOGIN_USERNAME         1011
-#define IDC_LIST1                       1012
 #define IDC_LIST_MESSAGE                1012
+#define IDC_LIST_DETAIL                 1012
+#define IDC_LIST_OVERVIEW               1013
 
 // Next default values for new objects
 // 

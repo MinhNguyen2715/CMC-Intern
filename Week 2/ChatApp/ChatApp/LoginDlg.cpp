@@ -37,6 +37,56 @@ END_MESSAGE_MAP()
 
 // CLoginDlg message handlers
 
+BOOL CLoginDlg::OnInitDialog() {
+	CDialogEx::OnInitDialog();
+
+	m_fontStatic.CreateFont(
+		-14,                        // Height (kích thước font)
+		0,                          // Width
+		0, 0,                       // Escapement, Orientation
+		FW_BOLD,                    // Weight: FW_NORMAL (thường) hoặc FW_BOLD (đậm)
+		FALSE, FALSE, 0,            // Italic, Underline, StrikeOut
+		DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY,
+		DEFAULT_PITCH | FF_SWISS,
+		_T("Segoe UI")              // Tên Font chữ
+	);
+
+	CWnd* pStatic = GetDlgItem(IDC_STATIC_LOGIN_TITLE);
+	if (pStatic) {
+		pStatic->SetFont(&m_fontStatic);
+	}
+	return TRUE;
+}
+
+BOOL CLoginDlg::PreTranslateMessage(MSG* pMsg)
+{
+	// Bắt sự kiện khi người dùng nhấn một phím xuống (WM_KEYDOWN)
+	if (pMsg->message == WM_KEYDOWN)
+	{
+		// Nếu phím bấm là VK_RETURN (Enter)
+		if (pMsg->wParam == VK_RETURN)
+		{
+			// Tự động kích hoạt sự kiện Click của nút IDC_BTN_LOG_LOG
+			OnBnClickedBtnLogLog();
+
+			// Trả về TRUE để báo cho Windows biết tin nhắn này đã được xử lý,
+			// ngăn không cho Windows tự gọi CDialogEx::OnOK() để đóng Dialog.
+			return TRUE;
+		}
+
+		//// Tùy chọn: Chặn luôn phím ESC (Escape) nếu không muốn người dùng bấm Esc làm đóng app
+		//if (pMsg->wParam == VK_ESCAPE)
+		//{
+		//	return TRUE; // Chặn phím Esc
+		//}
+	}
+
+	return CDialogEx::PreTranslateMessage(pMsg);
+}
+
 void CLoginDlg::OnBnClickedBtnLogReg()
 {
 	CRegisterDlg regDlg;
@@ -46,6 +96,7 @@ void CLoginDlg::OnBnClickedBtnLogReg()
 
 void CLoginDlg::OnBnClickedBtnLogLog()
 {
+	CString strUser, strPass;
 	GetDlgItemText(IDC_EDIT_LOGIN_USERNAME, strUser);
 	GetDlgItemText(IDC_EDIT_LOGIN_PASSWORD, strPass);
 

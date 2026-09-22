@@ -23,9 +23,12 @@ public:
 
 // Implementation
 private: 
-	CListCtrl m_listMessages;
-	void InitMessageList();
-	void PopulateFakeData();
+	CListCtrl m_listOverview;
+	CListCtrl m_listDetail;
+	CFont m_fontList;
+	CFont m_fontHeader;
+	BOOL m_bShowDetailView;
+	void UpdateDetailView(int nRowIndex);
 
 protected:
 	HICON m_hIcon;
@@ -34,6 +37,8 @@ protected:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnNMClickListOverview(NMHDR* pNMHDR, LRESULT* pResult);
 	DECLARE_MESSAGE_MAP()
 public:
 	

@@ -95,6 +95,7 @@ string HashPasswordSHA256(const string& password)
 
 void CRegisterDlg::OnBnClickedBtnRegReg()
 {
+	CString strUser, strPass, strConfirm;
 	GetDlgItemText(IDC_EDIT_REG_USERNAME, strUser);
 	GetDlgItemText(IDC_EDIT_REG_PASSWORD, strPass);
 	GetDlgItemText(IDC_EDIT_REG_CONFIRM, strConfirm);
