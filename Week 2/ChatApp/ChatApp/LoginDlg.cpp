@@ -63,25 +63,13 @@ BOOL CLoginDlg::OnInitDialog() {
 
 BOOL CLoginDlg::PreTranslateMessage(MSG* pMsg)
 {
-	// Bắt sự kiện khi người dùng nhấn một phím xuống (WM_KEYDOWN)
 	if (pMsg->message == WM_KEYDOWN)
 	{
-		// Nếu phím bấm là VK_RETURN (Enter)
 		if (pMsg->wParam == VK_RETURN)
 		{
-			// Tự động kích hoạt sự kiện Click của nút IDC_BTN_LOG_LOG
 			OnBnClickedBtnLogLog();
-
-			// Trả về TRUE để báo cho Windows biết tin nhắn này đã được xử lý,
-			// ngăn không cho Windows tự gọi CDialogEx::OnOK() để đóng Dialog.
 			return TRUE;
 		}
-
-		//// Tùy chọn: Chặn luôn phím ESC (Escape) nếu không muốn người dùng bấm Esc làm đóng app
-		//if (pMsg->wParam == VK_ESCAPE)
-		//{
-		//	return TRUE; // Chặn phím Esc
-		//}
 	}
 
 	return CDialogEx::PreTranslateMessage(pMsg);
@@ -89,8 +77,11 @@ BOOL CLoginDlg::PreTranslateMessage(MSG* pMsg)
 
 void CLoginDlg::OnBnClickedBtnLogReg()
 {
+	this->ShowWindow(SW_HIDE);
+
 	CRegisterDlg regDlg;
 	INT_PTR nResult = regDlg.DoModal();
+	this->ShowWindow(SW_SHOW);
 }
 
 

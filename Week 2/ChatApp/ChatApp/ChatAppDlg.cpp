@@ -33,6 +33,7 @@ BEGIN_MESSAGE_MAP(CChatAppDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
     ON_WM_SIZE()
+    ON_WM_DRAWITEM()
 	ON_NOTIFY(NM_CLICK, IDC_LIST_OVERVIEW, &CChatAppDlg::OnNMClickListOverview)
 END_MESSAGE_MAP()
 
@@ -95,9 +96,9 @@ BOOL CChatAppDlg::OnInitDialog()
     // Hide listDetail
     m_bShowDetailView = FALSE;
 
-    // Styles
-    m_listOverview.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
-    m_listDetail.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+    // Styles LVS_EX_GRIDLINES | 
+    m_listOverview.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
+    m_listDetail.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_LABELTIP);
 
     // ListOverview (Overview: Time | Sender | Message)
     m_listOverview.InsertColumn(0, _T("Time"), LVCFMT_LEFT);
@@ -114,7 +115,7 @@ BOOL CChatAppDlg::OnInitDialog()
 
     nIndex = m_listOverview.InsertItem(2, _T("11:35 AM"));
     m_listOverview.SetItemText(nIndex, 1, _T("Charlie"));
-    m_listOverview.SetItemText(nIndex, 2, _T("Will do. See you later!"));
+    m_listOverview.SetItemText(nIndex, 2, _T("Nhất trí! Lát gặp ở dưới sảnh nhé."));
 
     nIndex = m_listOverview.InsertItem(3, _T("01:16 PM"));
     m_listOverview.SetItemText(nIndex, 1, _T("David"));
@@ -122,7 +123,7 @@ BOOL CChatAppDlg::OnInitDialog()
 
     nIndex = m_listOverview.InsertItem(4, _T("02:50 PM"));
     m_listOverview.SetItemText(nIndex, 1, _T("Emma"));
-    m_listOverview.SetItemText(nIndex, 2, _T("Got it! See you at the studio."));
+    m_listOverview.SetItemText(nIndex, 2, _T("Được rồi! Tối mai gặp lại ở phòng tập."));
 
     // ListDetail (Detail: Time | Sender: | Me)
     m_listDetail.InsertColumn(0, _T("Time"), LVCFMT_LEFT);
@@ -171,36 +172,38 @@ void CChatAppDlg::OnSize(UINT nType, int cx, int cy)
     CDialogEx::OnSize(nType, cx, cy);
 
     // Verify HWNDs are valid before performing window layout repositioning
+    // If HWND = NULL (control is not created) -> return
     if (m_listOverview.GetSafeHwnd() == NULL || m_listDetail.GetSafeHwnd() == NULL)
         return;
 
     if (!m_bShowDetailView)
     {
-        // Detail view hidden -> Overview occupies full area
+        // Detail view hidden -> Overview takes full area
         m_listOverview.MoveWindow(0, 0, cx, cy, TRUE);
 
-        // Adjust column widths proportionally for Left ListCtrl: 10 / 10 / 80
+        // Adjust column widths proportionally for ListOverView: 10 / 10 / 80
         m_listOverview.SetColumnWidth(0, cx / 10);
         m_listOverview.SetColumnWidth(1, cx / 10);
         m_listOverview.SetColumnWidth(2, cx / 10 * 8);
     }
     else
     {
-        // Detail view visible -> Split area 50/50
+        // Detail view visible -> Split area 
         int nNewWidth = cx / 3;
 
-        // Left ListCtrl occupies [0 -> nNewWidth]
+        // Left ListCtrl: 0 -> nNewWidth
         m_listOverview.MoveWindow(0, 0, nNewWidth, cy, TRUE);
         m_listOverview.SetColumnWidth(0, nNewWidth / 4);
         m_listOverview.SetColumnWidth(1, nNewWidth / 4);
         m_listOverview.SetColumnWidth(2, nNewWidth / 2);
 
-        // Right ListCtrl occupies [nNewWidth -> cx]
+        // Right ListCtrl: nNewWidth -> cx
         m_listDetail.MoveWindow(nNewWidth, 0, cx - nNewWidth, cy, TRUE);
         m_listDetail.SetColumnWidth(0, (cx - nNewWidth) / 10 * 2);
         m_listDetail.SetColumnWidth(1, (cx - nNewWidth) / 10 * 4);
         m_listDetail.SetColumnWidth(2, (cx - nNewWidth) / 10 * 4);
     }
+
 }
 
 
@@ -243,8 +246,8 @@ void CChatAppDlg::UpdateDetailView(int nRowIndex)
     // Clear previous detail items
     m_listDetail.DeleteAllItems();
 
-    CString strSender = m_listOverview.GetItemText(nRowIndex, 1); 
-    CString strMessage = m_listOverview.GetItemText(nRowIndex, 2); 
+    CString strSender = m_listOverview.GetItemText(nRowIndex, 1);
+    CString strMessage = m_listOverview.GetItemText(nRowIndex, 2);
 
     // Rename column -> sender
     LVCOLUMN lvc;
@@ -254,10 +257,10 @@ void CChatAppDlg::UpdateDetailView(int nRowIndex)
     m_listDetail.SetColumn(1, &lvc);
     strHeader.ReleaseBuffer();
 
-    // Load specific conversation messages into m_listDetail based on nRowIndex
+    // Load message to listDetail
     switch (nRowIndex)
     {
-    case 0: // Conversation 0: Alice
+    case 0: // Conversation 0: Alice (Tiếng Anh)
     {
         int nIdx = m_listDetail.InsertItem(0, _T("09:00 AM"));
         m_listDetail.SetItemText(nIdx, 1, _T("Hey, are you free for a quick meeting today?"));
@@ -268,17 +271,16 @@ void CChatAppDlg::UpdateDetailView(int nRowIndex)
         m_listDetail.SetItemText(nIdx, 2, _T("Sure, I have time around 2 PM."));
 
         nIdx = m_listDetail.InsertItem(2, _T("09:02 AM"));
-        m_listDetail.SetItemText(nIdx, 1, _T("Perfect! We need to discuss the new MFC UI updates."));
+        m_listDetail.SetItemText(nIdx, 1, _T("Perfect! We need to discuss the new application updates."));
         m_listDetail.SetItemText(nIdx, 2, _T(""));
 
-        // Last message matching Overview row 0
         nIdx = m_listDetail.InsertItem(3, _T("09:03 AM"));
         m_listDetail.SetItemText(nIdx, 1, _T(""));
         m_listDetail.SetItemText(nIdx, 2, _T("Sounds good. Send me the calendar invite."));
         break;
     }
 
-    case 1: // Conversation 1: Bob
+    case 1: // Conversation 1: Bob (Tiếng Anh)
     {
         int nIdx = m_listDetail.InsertItem(0, _T("10:15 AM"));
         m_listDetail.SetItemText(nIdx, 1, _T("Did you finish analyzing the binary file logs?"));
@@ -296,43 +298,41 @@ void CChatAppDlg::UpdateDetailView(int nRowIndex)
         m_listDetail.SetItemText(nIdx, 1, _T(""));
         m_listDetail.SetItemText(nIdx, 2, _T("Already pushed. Please review the pull request whenever you are ready."));
 
-        // Last message matching Overview row 1
         nIdx = m_listDetail.InsertItem(4, _T("10:21 AM"));
         m_listDetail.SetItemText(nIdx, 1, _T("Checking it right now."));
         m_listDetail.SetItemText(nIdx, 2, _T(""));
         break;
     }
 
-    case 2: // Conversation 2: Charlie
+    case 2: // Conversation 2: Charlie (Tiếng Việt)
     {
         int nIdx = m_listDetail.InsertItem(0, _T("11:30 AM"));
-        m_listDetail.SetItemText(nIdx, 1, _T("Are we still playing game on Steam tonight?"));
+        m_listDetail.SetItemText(nIdx, 1, _T("Alo, trưa nay có đi ăn gì không?"));
         m_listDetail.SetItemText(nIdx, 2, _T(""));
 
         nIdx = m_listDetail.InsertItem(1, _T("11:32 AM"));
         m_listDetail.SetItemText(nIdx, 1, _T(""));
-        m_listDetail.SetItemText(nIdx, 2, _T("Yes! I will be online around 8 PM."));
+        m_listDetail.SetItemText(nIdx, 2, _T("Có nhé! Tầm 12h kém 15 tôi xong việc rồi đi luôn."));
 
         nIdx = m_listDetail.InsertItem(2, _T("11:33 AM"));
-        m_listDetail.SetItemText(nIdx, 1, _T("Awesome, invite the rest of the team as well."));
+        m_listDetail.SetItemText(nIdx, 1, _T("Okie, rủ thêm mấy đứa trong lớp đi cùng cho vui."));
         m_listDetail.SetItemText(nIdx, 2, _T(""));
 
-        // Last message matching Overview row 2
         nIdx = m_listDetail.InsertItem(3, _T("11:35 AM"));
         m_listDetail.SetItemText(nIdx, 1, _T(""));
-        m_listDetail.SetItemText(nIdx, 2, _T("Will do. See you later!"));
+        m_listDetail.SetItemText(nIdx, 2, _T("Nhất trí! Lát gặp ở dưới sảnh nhé."));
         break;
     }
 
-    case 3: // Conversation 3: David
+    case 3: // Conversation 3: David (Tiếng Anh)
     {
         int nIdx = m_listDetail.InsertItem(0, _T("01:10 PM"));
-        m_listDetail.SetItemText(nIdx, 1, _T("Hi! Do you have the CCNA study materials?"));
+        m_listDetail.SetItemText(nIdx, 1, _T("Hi! Do you have the course study materials?"));
         m_listDetail.SetItemText(nIdx, 2, _T(""));
 
         nIdx = m_listDetail.InsertItem(1, _T("01:12 PM"));
         m_listDetail.SetItemText(nIdx, 1, _T(""));
-        m_listDetail.SetItemText(nIdx, 2, _T("Yes, I have the full course notes and Packet Tracer labs."));
+        m_listDetail.SetItemText(nIdx, 2, _T("Yes, I have the full course notes and practical labs here."));
 
         nIdx = m_listDetail.InsertItem(2, _T("01:13 PM"));
         m_listDetail.SetItemText(nIdx, 1, _T("Could you share the Google Drive link with me?"));
@@ -342,35 +342,35 @@ void CChatAppDlg::UpdateDetailView(int nRowIndex)
         m_listDetail.SetItemText(nIdx, 1, _T(""));
         m_listDetail.SetItemText(nIdx, 2, _T("Sent to your email address."));
 
-        // Last message matching Overview row 3
         nIdx = m_listDetail.InsertItem(4, _T("01:16 PM"));
         m_listDetail.SetItemText(nIdx, 1, _T("Received! Thanks a lot!"));
         m_listDetail.SetItemText(nIdx, 2, _T(""));
         break;
     }
 
-    case 4: // Conversation 4: Emma
+    case 4: // Conversation 4: Emma (Tiếng Việt)
     {
         int nIdx = m_listDetail.InsertItem(0, _T("02:45 PM"));
-        m_listDetail.SetItemText(nIdx, 1, _T("Don't forget guitar training lesson tomorrow evening."));
+        m_listDetail.SetItemText(nIdx, 1, _T("Đừng quên tối mai có lịch tập ở studio nhé!"));
         m_listDetail.SetItemText(nIdx, 2, _T(""));
 
         nIdx = m_listDetail.InsertItem(1, _T("02:46 PM"));
         m_listDetail.SetItemText(nIdx, 1, _T(""));
-        m_listDetail.SetItemText(nIdx, 2, _T("Thanks for reminding me! I almost forgot."));
+        m_listDetail.SetItemText(nIdx, 2, _T("May mà có m đã nhắc! T suýt chút nữa là quên mất. Mấy giờ nhỉ?"));
 
         nIdx = m_listDetail.InsertItem(2, _T("02:47 PM"));
-        m_listDetail.SetItemText(nIdx, 1, _T("Bring your acoustic guitar this time."));
+        m_listDetail.SetItemText(nIdx, 1, _T("8h tối. Lần này nhớ mang theo cái đàn với cajon đấy."));
         m_listDetail.SetItemText(nIdx, 2, _T(""));
 
-        // Last message matching Overview row 4
         nIdx = m_listDetail.InsertItem(3, _T("02:50 PM"));
         m_listDetail.SetItemText(nIdx, 1, _T(""));
-        m_listDetail.SetItemText(nIdx, 2, _T("Got it! See you at the studio."));
+        m_listDetail.SetItemText(nIdx, 2, _T("Được rồi! Tối mai gặp lại ở phòng tập."));
         break;
     }
 
     default:
         break;
     }
+
+    m_listDetail.RedrawWindow();
 }

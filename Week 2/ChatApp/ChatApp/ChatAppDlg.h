@@ -33,12 +33,13 @@ private:
 protected:
 	HICON m_hIcon;
 
-	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnNMClickListOverview(NMHDR* pNMHDR, LRESULT* pResult);
+
+	// Generated message map functions
 	DECLARE_MESSAGE_MAP()
 public:
 	
