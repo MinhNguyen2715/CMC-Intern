@@ -1,7 +1,3 @@
-# --- Specific Folders to Ignore ---
-Demo/
-Tinhtong2so/
-
 # --- IDE & Cache Files ---
 .vs/
 *.ipch
