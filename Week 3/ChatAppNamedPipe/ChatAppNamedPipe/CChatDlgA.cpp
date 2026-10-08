@@ -23,19 +23,18 @@ CChatDlgA::CChatDlgA(CWnd* pParent /*=nullptr*/)
 
 CChatDlgA::~CChatDlgA()
 {
-	// 1. Hạ cờ báo dừng luồng
+	// Stop thread
 	m_bRunning = FALSE;
 
-	// 2. Đóng Handle Pipe để ÉP hủy trạng thái chờ (Unblock ReadFile / ConnectNamedPipe)
+	// Close Handle Pipe (Unblock ReadFile / ConnectNamedPipe)
 	if (m_hPipe != INVALID_HANDLE_VALUE)
 	{
-		// Hủy các thao tác I/O đang treo trên Pipe
 		::CancelIoEx(m_hPipe, NULL);
 		::CloseHandle(m_hPipe);
 		m_hPipe = INVALID_HANDLE_VALUE;
 	}
 
-	// 3. Chờ Worker Thread kết thúc hoàn toàn (Tối đa 1 giây)
+	// Wait thread
 	if (m_hListenThread != NULL)
 	{
 		::WaitForSingleObject(m_hListenThread, 100);
@@ -86,7 +85,7 @@ BOOL CChatDlgA::OnInitDialog()
 	//);
 
 	// Named pipe server (Duplex)
-	m_hPipe = ::CreateNamedPipe(
+	m_hPipe = CreateNamedPipe(
 		CHAT_PIPE_NAME,
 		PIPE_ACCESS_DUPLEX,
 		PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
@@ -97,7 +96,7 @@ BOOL CChatDlgA::OnInitDialog()
 	if (m_hPipe != INVALID_HANDLE_VALUE)
 	{
 		m_bRunning = TRUE;
-		m_hListenThread = ::CreateThread(NULL, 0, PipeServerThread, this, 0, NULL);
+		m_hListenThread = CreateThread(NULL, 0, PipeServerThread, this, 0, NULL);
 	}
 
 	if (m_font.GetSafeHandle() == NULL)
@@ -108,7 +107,6 @@ BOOL CChatDlgA::OnInitDialog()
 			DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, _T("Segoe UI")
 		);
 	}
-
 	// List control 
 	CListCtrl* pList = static_cast<CListCtrl*>(GetDlgItem(IDC_LIST_CHAT_A));
 	if (pList != NULL && pList->GetSafeHwnd() != NULL)
@@ -425,4 +423,3 @@ void CChatDlgA::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWi
 		outLines.Add(strCurrentLine);
 	}
 }
-
