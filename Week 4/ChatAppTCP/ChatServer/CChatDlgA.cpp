@@ -114,7 +114,7 @@ BOOL CChatDlgA::OnInitDialog()
 		return FALSE;
 	}
 
-	// Start listening for incoming client connections (Backlog queue: 5)
+	// Start listening for incoming client connections 
 	if (::listen(m_listenSocket, 5) == SOCKET_ERROR)
 	{
 		::closesocket(m_listenSocket);

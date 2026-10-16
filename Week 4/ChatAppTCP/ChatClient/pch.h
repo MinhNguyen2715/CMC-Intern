@@ -18,6 +18,6 @@
 #define WM_SOCKET_MSG_RECEIVED (WM_USER + 1)
 
 #define PORT_CHAT 2715
-#define SERVER_IP _T("192.168.1.22")
+#define SERVER_IP _T("10.249.72.206")
 
 #endif //PCH_H
