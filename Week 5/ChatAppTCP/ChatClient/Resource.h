@@ -2,14 +2,17 @@
 // Microsoft Visual C++ generated include file.
 // Used by ChatClient.rc
 //
-
 #define IDD_CHATCLIENT_DIALOG           102
 #define IDD_CHAT_DLG_B                  103
+#define IDD_CHAT_DLG                    103
 #define IDR_MAINFRAME                   128
 #define IDC_EDIT1                       1000
 #define IDC_EDIT_MSG_B                  1000
+#define IDC_EDIT_MSG                    1000
 #define IDC_LIST_CHAT_B                 1001
+#define IDC_LIST_CHAT                   1001
 #define IDC_BTN_SEND_B                  1002
+#define IDC_BTN_SEND                    1002
 
 // Next default values for new objects
 // 

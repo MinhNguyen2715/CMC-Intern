@@ -30,7 +30,7 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CChatDlgB.h">
+    <ClInclude Include="CChatDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -41,7 +41,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CChatDlgB.cpp">
+    <ClCompile Include="CChatDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

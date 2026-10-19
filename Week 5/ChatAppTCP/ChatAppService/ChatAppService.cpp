@@ -238,7 +238,7 @@ BOOL InstallService()
     SC_HANDLE hService = CreateService(
         hSCManager,
         SERVICE_NAME,               // Service Name
-        _T("Chat App TCP Service"), // Display Name
+        _T("Chat App Service"), // Display Name
         SERVICE_ALL_ACCESS,
         SERVICE_WIN32_OWN_PROCESS,
         SERVICE_AUTO_START,         // Auto-start with Windows

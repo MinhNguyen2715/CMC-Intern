@@ -5,7 +5,7 @@
 #include "pch.h"
 #include "framework.h"
 #include "ChatClient.h"
-#include "CChatDlgB.h"
+#include "CChatDlg.h"
 
 
 #ifdef _DEBUG
@@ -44,9 +44,9 @@ BOOL CChatClientApp::InitInstance()
     CWinApp::InitInstance();
     if (!AfxSocketInit()) return FALSE;
 
-    CChatDlgB dlgB;
-    m_pMainWnd = &dlgB;
-    dlgB.DoModal();
+    CChatDlg dlg;
+    m_pMainWnd = &dlg;
+    dlg.DoModal();
 
     return FALSE;
 }

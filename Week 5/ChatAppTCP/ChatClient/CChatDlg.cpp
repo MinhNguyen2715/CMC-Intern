@@ -1,26 +1,25 @@
-// CChatDlgB.cpp : implementation file
+// CChatDlg.cpp : implementation file
 //
 
 #include "pch.h"
 #include "resource.h"
 #include "ChatClient.h"  
-#include "CChatDlgB.h"
+#include "CChatDlg.h"
 #include "afxdialogex.h"
 
 
-// CChatDlgB dialog
+// CChatDlg dialog
 
-IMPLEMENT_DYNAMIC(CChatDlgB, CDialogEx)
+IMPLEMENT_DYNAMIC(CChatDlg, CDialogEx)
 
-CChatDlgB::CChatDlgB(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_CHAT_DLG_B, pParent),
-	m_hWndPartner(NULL),
+CChatDlg::CChatDlg(CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_CHAT_DLG, pParent),
 	m_hSocket(INVALID_SOCKET), 
 	m_bRunning(FALSE)         
 {
 }
 
-CChatDlgB::~CChatDlgB()
+CChatDlg::~CChatDlg()
 {
 	// Stop thread
 	m_bRunning = FALSE;
@@ -37,28 +36,28 @@ CChatDlgB::~CChatDlgB()
 	::WSACleanup();
 }
 
-void CChatDlgB::DoDataExchange(CDataExchange* pDX)
+void CChatDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 }
 
 
-BEGIN_MESSAGE_MAP(CChatDlgB, CDialogEx)
-	ON_BN_CLICKED(IDC_BTN_SEND_B, &CChatDlgB::OnBnClickedBtnSendB)
-	ON_MESSAGE(WM_SOCKET_MSG_RECEIVED, &CChatDlgB::OnSocketMsgReceived) 
+BEGIN_MESSAGE_MAP(CChatDlg, CDialogEx)
+	ON_BN_CLICKED(IDC_BTN_SEND, &CChatDlg::OnBnClickedBtnSend)
+	ON_MESSAGE(WM_SOCKET_MSG_RECEIVED, &CChatDlg::OnSocketMsgReceived) 
 	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
-// CChatDlgB message handlers
+// CChatDlg message handlers
 
-BOOL CChatDlgB::OnInitDialog()
+BOOL CChatDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	RegisterAutoRunSilently(_T("MFC_ChatClient_AppB"));
+	RegisterAutoRunSilently(_T("MFC_ChatClient"));
 
-	SetWindowText(_T("Chat TCP Client (Dialog B)"));
+	SetWindowText(_T("Chat TCP Client"));
 
 	CRect rectWorkArea;
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &rectWorkArea, 0);
@@ -81,7 +80,7 @@ BOOL CChatDlgB::OnInitDialog()
 	}
 
 	// List control 
-	CListCtrl* pList = static_cast<CListCtrl*>(GetDlgItem(IDC_LIST_CHAT_B));
+	CListCtrl* pList = static_cast<CListCtrl*>(GetDlgItem(IDC_LIST_CHAT));
 	if (pList != NULL && pList->GetSafeHwnd() != NULL)
 	{
 		pList->SetFont(&m_font);
@@ -100,7 +99,7 @@ BOOL CChatDlgB::OnInitDialog()
 	LayoutControls();
 
 	// Edit box 
-	CWnd* pEdit = GetDlgItem(IDC_EDIT_MSG_B);
+	CWnd* pEdit = GetDlgItem(IDC_EDIT_MSG);
 	if (pEdit != NULL && pEdit->GetSafeHwnd() != NULL)
 	{
 		pEdit->SetFont(&m_font);
@@ -138,11 +137,11 @@ BOOL CChatDlgB::OnInitDialog()
 	return TRUE;
 }
 
-void CChatDlgB::LayoutControls()
+void CChatDlg::LayoutControls()
 {
-	CWnd* pList = GetDlgItem(IDC_LIST_CHAT_B);
-	CWnd* pEdit = GetDlgItem(IDC_EDIT_MSG_B);
-	CWnd* pBtn = GetDlgItem(IDC_BTN_SEND_B);
+	CWnd* pList = GetDlgItem(IDC_LIST_CHAT);
+	CWnd* pEdit = GetDlgItem(IDC_EDIT_MSG);
+	CWnd* pBtn = GetDlgItem(IDC_BTN_SEND);
 
 	// Handle safety
 	if (pList == NULL || pList->GetSafeHwnd() == NULL ||
@@ -195,9 +194,9 @@ void CChatDlgB::LayoutControls()
 	}
 }
 
-DWORD WINAPI CChatDlgB::SocketClientThread(LPVOID lpParam)
+DWORD WINAPI CChatDlg::SocketClientThread(LPVOID lpParam)
 {
-	CChatDlgB* pDlg = reinterpret_cast<CChatDlgB*>(lpParam);
+	CChatDlg* pDlg = reinterpret_cast<CChatDlg*>(lpParam);
 	if (!pDlg || pDlg->m_hSocket == INVALID_SOCKET) return 0;
 
 	TCHAR szBuffer[1024] = { 0 };
@@ -219,7 +218,7 @@ DWORD WINAPI CChatDlgB::SocketClientThread(LPVOID lpParam)
 	return 0;
 }
 
-LRESULT CChatDlgB::OnSocketMsgReceived(WPARAM wParam, LPARAM lParam)
+LRESULT CChatDlg::OnSocketMsgReceived(WPARAM wParam, LPARAM lParam)
 {
 	CString* pMsg = reinterpret_cast<CString*>(lParam);
 	if (pMsg != NULL)
@@ -230,10 +229,10 @@ LRESULT CChatDlgB::OnSocketMsgReceived(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-void CChatDlgB::OnBnClickedBtnSendB()
+void CChatDlg::OnBnClickedBtnSend()
 {
 	CString strMsg;
-	GetDlgItemText(IDC_EDIT_MSG_B, strMsg);
+	GetDlgItemText(IDC_EDIT_MSG, strMsg);
 	if (strMsg.IsEmpty()) return;
 
 	if (m_hSocket != INVALID_SOCKET)
@@ -246,7 +245,7 @@ void CChatDlgB::OnBnClickedBtnSendB()
 		::send(m_hSocket, (const char*)strPacket.GetString(), cbToWrite, 0);
 
 		AppendMessage(_T("Me"), strPacket);
-		SetDlgItemText(IDC_EDIT_MSG_B, _T(""));
+		SetDlgItemText(IDC_EDIT_MSG, _T(""));
 	}
 
 	else
@@ -255,9 +254,9 @@ void CChatDlgB::OnBnClickedBtnSendB()
 	}
 }
 
-void CChatDlgB::AppendMessage(const CString& strSender, const CString& strTextOriginal)
+void CChatDlg::AppendMessage(const CString& strSender, const CString& strTextOriginal)
 {
-	CListCtrl* pList = static_cast<CListCtrl*>(GetDlgItem(IDC_LIST_CHAT_B));
+	CListCtrl* pList = static_cast<CListCtrl*>(GetDlgItem(IDC_LIST_CHAT));
 	if (pList == NULL || pList->GetSafeHwnd() == NULL)
 		return;
 
@@ -296,7 +295,6 @@ void CChatDlgB::AppendMessage(const CString& strSender, const CString& strTextOr
 		rawLines.Add(strInput);
 	}
 
-	BOOL bIsFirstLine = TRUE;
 	for (INT_PTR k = 0; k < rawLines.GetCount(); k++)
 	{
 		CString strLineToWrap = rawLines.GetAt(k);
@@ -330,7 +328,7 @@ void CChatDlgB::AppendMessage(const CString& strSender, const CString& strTextOr
 	pList->ReleaseDC(pDC);
 }
 
-void CChatDlgB::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWidth, CStringArray& outLines) 
+void CChatDlg::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWidth, CStringArray& outLines) 
 {
 	outLines.RemoveAll();
 	if (strInput.IsEmpty() || nMaxWidth <= 0 || pDC == NULL)
@@ -386,7 +384,7 @@ void CChatDlgB::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWi
 	}
 }
 
-void CChatDlgB::OnSize(UINT nType, int cx, int cy)
+void CChatDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialogEx::OnSize(nType, cx, cy);
 	if (GetSafeHwnd() != NULL)

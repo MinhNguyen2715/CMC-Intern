@@ -185,7 +185,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CChatDlgB.h" />
+    <ClInclude Include="CChatDlg.h" />
     <ClInclude Include="ChatClient.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
@@ -193,7 +193,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CChatDlgB.cpp" />
+    <ClCompile Include="CChatDlg.cpp" />
     <ClCompile Include="ChatClient.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
