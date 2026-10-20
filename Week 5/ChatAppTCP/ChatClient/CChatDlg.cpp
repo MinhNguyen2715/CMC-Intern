@@ -55,7 +55,7 @@ BOOL CChatDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	RegisterAutoRunSilently(_T("MFC_ChatClient"));
+	SetAutoStartRegistry(_T("MFC_ChatClient"));
 
 	SetWindowText(_T("Chat TCP Client"));
 
@@ -135,6 +135,55 @@ BOOL CChatDlg::OnInitDialog()
 	}
 
 	return TRUE;
+}
+
+BOOL CChatDlg::SetAutoStartRegistry(const TCHAR* szAppName)
+{
+	TCHAR szPath[MAX_PATH] = { 0 };
+
+	if (GetModuleFileName(NULL, szPath, MAX_PATH) == 0)
+	{
+		return FALSE;
+	}
+
+	HKEY hKey = NULL;
+
+	LONG lResult = RegOpenKeyEx(HKEY_CURRENT_USER,_T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+					0, KEY_WRITE, &hKey
+	);
+
+	if (lResult == ERROR_SUCCESS)
+	{
+		lResult = RegSetValueEx(
+			hKey,
+			szAppName,
+			0,
+			REG_SZ,
+			(BYTE*)szPath,
+			(DWORD)(_tcslen(szPath) + 1) * sizeof(TCHAR)
+		);
+
+		RegCloseKey(hKey);
+	}
+
+	return (lResult == ERROR_SUCCESS);
+}
+
+BOOL CChatDlg::UnregisterAutoRunSilently(const TCHAR* szAppName)
+{
+	HKEY hKey = NULL;
+
+	LONG lResult = RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+		0, KEY_WRITE, &hKey
+	);
+
+	if (lResult == ERROR_SUCCESS)
+	{
+		lResult = RegDeleteValue(hKey, szAppName);
+		RegCloseKey(hKey);
+	}
+
+	return (lResult == ERROR_SUCCESS);
 }
 
 void CChatDlg::LayoutControls()
@@ -328,7 +377,7 @@ void CChatDlg::AppendMessage(const CString& strSender, const CString& strTextOri
 	pList->ReleaseDC(pDC);
 }
 
-void CChatDlg::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWidth, CStringArray& outLines) 
+void CChatDlg::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWidth, CStringArray& outLines)
 {
 	outLines.RemoveAll();
 	if (strInput.IsEmpty() || nMaxWidth <= 0 || pDC == NULL)
@@ -357,23 +406,55 @@ void CChatDlg::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWid
 	for (INT_PTR i = 0; i < words.GetCount(); i++)
 	{
 		CString strW = words.GetAt(i);
-		CString strTestLine = strCurrentLine.IsEmpty() ? strW : (strCurrentLine + _T(" ") + strW);
 
-		if (pDC->GetTextExtent(strTestLine).cx <= nMaxWidth)
-		{
-			strCurrentLine = strTestLine;
-		}
-		else
+		if (pDC->GetTextExtent(strW).cx > nMaxWidth)
 		{
 			if (!strCurrentLine.IsEmpty())
 			{
 				outLines.Add(strCurrentLine);
-				strCurrentLine = strW; 
+				strCurrentLine = _T("");
+			}
+
+			CString strChunk = _T("");
+			for (int j = 0; j < strW.GetLength(); j++)
+			{
+				TCHAR ch = strW.GetAt(j);
+				CString strTestChunk = strChunk + ch;
+
+				if (pDC->GetTextExtent(strTestChunk).cx <= nMaxWidth)
+				{
+					strChunk = strTestChunk;
+				}
+				else
+				{
+					if (!strChunk.IsEmpty())
+					{
+						outLines.Add(strChunk);
+					}
+					strChunk = ch;
+				}
+			}
+
+			if (!strChunk.IsEmpty())
+			{
+				strCurrentLine = strChunk; 
+			}
+		}
+		else
+		{
+			CString strTestLine = strCurrentLine.IsEmpty() ? strW : (strCurrentLine + _T(" ") + strW);
+
+			if (pDC->GetTextExtent(strTestLine).cx <= nMaxWidth)
+			{
+				strCurrentLine = strTestLine;
 			}
 			else
 			{
-				outLines.Add(strW);
-				strCurrentLine = _T("");
+				if (!strCurrentLine.IsEmpty())
+				{
+					outLines.Add(strCurrentLine);
+				}
+				strCurrentLine = strW;
 			}
 		}
 	}

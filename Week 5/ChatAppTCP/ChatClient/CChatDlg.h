@@ -32,6 +32,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 	afx_msg LRESULT OnSocketMsgReceived(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
+	BOOL SetAutoStartRegistry(const TCHAR* szAppName);
+	BOOL UnregisterAutoRunSilently(const TCHAR* szAppName);
 
 public:
 	void AppendMessage(const CString& strSender, const CString& strTextOriginal);
