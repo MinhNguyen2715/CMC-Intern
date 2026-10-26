@@ -220,7 +220,7 @@ DWORD WINAPI ClientWorkerThread(LPVOID lpParam)
     }
     LeaveCriticalSection(&g_csClients);
 
-    shutdown(clientSocket, SD_BOTH);
+    shutdown(clientSocket, SD_BOTH);   
     closesocket(clientSocket);
     return 0;
 }
@@ -258,7 +258,6 @@ BOOL InstallService()
     return TRUE;
 }
 
-// Uninstall Service from Windows SCM
 BOOL UninstallService()
 {
     SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
