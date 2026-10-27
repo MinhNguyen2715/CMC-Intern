@@ -39,10 +39,11 @@ CChatAppApp theApp;
 
 BOOL CChatAppApp::InitInstance()
 {
+    AfxInitRichEdit2();
     CWinApp::InitInstance();
     AfxEnableControlContainer();
 
-    // 1. Khởi tạo Winsock 2.2 cho Client
+    // Winsock init
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
@@ -50,20 +51,19 @@ BOOL CChatAppApp::InitInstance()
         return FALSE;
     }
 
-    // 2. Mở CLoginDlg trước
+    // Open Login dialog
     CLoginDlg loginDlg;
     if (loginDlg.DoModal() == IDOK)
     {
-        // 3. Đăng nhập thành công -> Chuyển Socket & Username sang CChatDlg
+        // Login success -> pass Socket & Username to CChatDlg
         CChatDlg chatDlg;
-        chatDlg.m_hSocket = loginDlg.m_hSocket;            // Dùng lại Socket đã kết nối
-        chatDlg.m_strUsername = loginDlg.m_strUsername;   // Lưu username đã đăng nhập
+        chatDlg.m_hSocket = loginDlg.m_hSocket;            
+        chatDlg.m_strUsername = loginDlg.m_strUsername;  
 
         m_pMainWnd = &chatDlg;
-        chatDlg.DoModal(); // Mở màn hình Chat chính
+        chatDlg.DoModal(); 
     }
 
-    // Dọn dẹp Winsock khi thoát ứng dụng
     WSACleanup();
     return FALSE;
 }

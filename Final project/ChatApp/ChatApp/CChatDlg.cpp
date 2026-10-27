@@ -26,7 +26,7 @@ void CChatDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LIST_USER, m_listUser);
-	DDX_Control(pDX, IDC_LIST_CHAT, m_listChat);
+    DDX_Control(pDX, IDC_LIST_CHAT, m_richChat);
 }
 
 
@@ -45,10 +45,12 @@ BOOL CChatDlg::OnInitDialog()
     CDialogEx::OnInitDialog();
 
     // Font
-    m_fontUI.CreatePointFont(100, _T("Segoe UI"));
+    m_fontUI.CreatePointFont(120, _T("Segoe UI"));
 
     m_listUser.SetFont(&m_fontUI);
-    m_listChat.SetFont(&m_fontUI);
+    m_richChat.SetFont(&m_fontUI);
+
+    m_richChat.SetTargetDevice(NULL, 0);
 
     if (GetDlgItem(IDC_EDIT_MESSAGE))
         GetDlgItem(IDC_EDIT_MESSAGE)->SetFont(&m_fontUI);
@@ -67,7 +69,6 @@ BOOL CChatDlg::OnInitDialog()
 
     // List control config
     InitUserListControl();
-    InitChatListControl();
 
     // Hide chat view
     ToggleChatUI(FALSE);
@@ -92,7 +93,7 @@ void CChatDlg::OnSize(UINT nType, int cx, int cy)
 
     int margin = 10;        
     int spacing = 10;       // Control spacing
-    int inputHeight = 35;   // Edit box + Send btn high
+    int inputHeight = 60;   // Edit box + Send btn high
 
     // List User: 25% width
     int leftWidth = static_cast<int>(cx * 0.25);
@@ -117,15 +118,15 @@ void CChatDlg::OnSize(UINT nType, int cx, int cy)
     }
 
     // List chat
-    if (m_listChat.GetSafeHwnd() && ::IsWindow(m_listChat.GetSafeHwnd()))
+    if (m_richChat.GetSafeHwnd() && ::IsWindow(m_richChat.GetSafeHwnd()))
     {
-        m_listChat.MoveWindow(margin + leftWidth + spacing, margin, rightWidth, chatHeight);
-        // Split in half
-        int nColWidth = (rightWidth - 25) / 2;
-        if (nColWidth < 100) nColWidth = 100;
+        m_richChat.MoveWindow(margin + leftWidth + spacing, margin, rightWidth, chatHeight);
 
-        m_listChat.SetColumnWidth(0, nColWidth); 
-        m_listChat.SetColumnWidth(1, nColWidth); 
+        // Add padding to margin
+        CRect rect;
+        m_richChat.GetClientRect(&rect);
+        rect.DeflateRect(15, 10, 15, 10);
+        m_richChat.SetRect(&rect);
     }
 
     // Edit box
@@ -217,15 +218,6 @@ void CChatDlg::InitUserListControl()
         IDB_PNG_ADMIN
     };
 
-    std::vector<CString> avatarFiles = {
-        _T("red.png"),
-        _T("blue.jpg"),
-        _T("yellow.png"),
-        _T("green.jpg"),
-        _T("orange.png"),
-        _T("admin.png")
-    };
-
     HINSTANCE hInst = AfxGetInstanceHandle();
     CWindowDC dcScreen(NULL);
 
@@ -281,23 +273,23 @@ int GetAvatarIndexByUsername(const CString& username)
     return 0; // Default Avatar
 }
 
-void CChatDlg::InitChatListControl()
-{
-    if (!m_listChat.GetSafeHwnd() || !::IsWindow(m_listChat.GetSafeHwnd())) return;
-
-    // Hide header + select full row
-    m_listChat.ModifyStyle(0, LVS_NOCOLUMNHEADER);
-    m_listChat.SetExtendedStyle(LVS_EX_FULLROWSELECT);
-
-    // 2 columns
-    CRect rectChat;
-    m_listChat.GetClientRect(&rectChat);
-    int nColWidth = (rectChat.Width() - 25) / 2;
-    if (nColWidth < 100) nColWidth = 100;
-
-    m_listChat.InsertColumn(0, _T("Partner"), LVCFMT_LEFT, nColWidth);   
-    m_listChat.InsertColumn(1, _T("Me"), LVCFMT_RIGHT, nColWidth);        
-}
+//void CChatDlg::InitChatListControl()
+//{
+//    if (!m_listChat.GetSafeHwnd() || !::IsWindow(m_listChat.GetSafeHwnd())) return;
+//
+//    // Hide header + select full row
+//    m_listChat.ModifyStyle(0, LVS_NOCOLUMNHEADER);
+//    m_listChat.SetExtendedStyle(LVS_EX_FULLROWSELECT);
+//
+//    // 2 columns
+//    CRect rectChat;
+//    m_listChat.GetClientRect(&rectChat);
+//    int nColWidth = (rectChat.Width() - 25) / 2;
+//    if (nColWidth < 100) nColWidth = 100;
+//
+//    m_listChat.InsertColumn(0, _T("Partner"), LVCFMT_LEFT, nColWidth);   
+//    m_listChat.InsertColumn(1, _T("Me"), LVCFMT_RIGHT, nColWidth);        
+//}
 
 void CChatDlg::OnNMClickListUser(NMHDR* pNMHDR, LRESULT* pResult)
 {
@@ -312,7 +304,7 @@ void CChatDlg::OnNMClickListUser(NMHDR* pNMHDR, LRESULT* pResult)
         // Show chat
         ToggleChatUI(TRUE);
 
-        m_listChat.DeleteAllItems();
+        m_richChat.SetWindowText(_T(""));
 
         RequestChatHistory(m_strSelectedUser);
     }
@@ -472,9 +464,10 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
                 UpdateUserLastMessage(strWithUser, strLastContent, strLastTime);
             }
 
-            if (strWithUser.CompareNoCase(m_strSelectedUser) == 0 && m_listChat.GetSafeHwnd() && ::IsWindow(m_listChat.GetSafeHwnd()))
+            if (strWithUser.CompareNoCase(m_strSelectedUser) == 0 && m_richChat.GetSafeHwnd() && ::IsWindow(m_richChat.GetSafeHwnd()))
             {
-                m_listChat.DeleteAllItems();
+                m_richChat.SetRedraw(FALSE);
+                m_richChat.SetWindowText(_T(""));
 
                 for (const auto& msg : messages)
                 {
@@ -488,6 +481,9 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
 
                     AppendChatMessage(strSender, strContent, strTime);
                 }
+                m_richChat.SetRedraw(TRUE);
+                m_richChat.Invalidate();
+                m_richChat.PostMessage(WM_VSCROLL, SB_BOTTOM, 0);
             }
         }
         // Real time receive mesg
@@ -503,7 +499,7 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
             CString strTime = FormatTimestamp(ts);
             CString strTimeList = FormatUserListTimestamp(ts);
 
-            if (strFromUser.CompareNoCase(m_strSelectedUser) == 0 && m_listChat.GetSafeHwnd() && ::IsWindow(m_listChat.GetSafeHwnd()))
+            if (strFromUser.CompareNoCase(m_strSelectedUser) == 0 && m_richChat.GetSafeHwnd() && ::IsWindow(m_richChat.GetSafeHwnd()))
             {
                 AppendChatMessage(strFromUser, strContent, strTime);
             }
@@ -584,150 +580,165 @@ void CChatDlg::OnOK()
     OnBnClickedBtnSend();
 }
 
-// Calculate new line
-void CChatDlg::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWidth, CStringArray& outLines)
-{
-    outLines.RemoveAll();
-    if (strInput.IsEmpty() || nMaxWidth <= 0 || pDC == NULL)
-    {
-        outLines.Add(strInput);
-        return;
-    }
+//// Calculate new line
+//void CChatDlg::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWidth, CStringArray& outLines)
+//{
+//    outLines.RemoveAll();
+//    if (strInput.IsEmpty() || nMaxWidth <= 0 || pDC == NULL)
+//    {
+//        outLines.Add(strInput);
+//        return;
+//    }
+//
+//    CString strCurrentLine = _T("");
+//    int nPos = 0;
+//    CString strWord;
+//
+//    while (AfxExtractSubString(strWord, strInput, nPos, _T(' ')))
+//    {
+//        // 1 word > column width -> split that word
+//        if (pDC->GetTextExtent(strWord).cx > nMaxWidth)
+//        {
+//            if (!strCurrentLine.IsEmpty())
+//            {
+//                outLines.Add(strCurrentLine);
+//                strCurrentLine = _T("");
+//            }
+//
+//            for (int i = 0; i < strWord.GetLength(); i++)
+//            {
+//                CString strChar = strWord.Mid(i, 1);
+//                if (pDC->GetTextExtent(strCurrentLine + strChar).cx > nMaxWidth && !strCurrentLine.IsEmpty())
+//                {
+//                    outLines.Add(strCurrentLine);
+//                    strCurrentLine = strChar;
+//                }
+//                else
+//                {
+//                    strCurrentLine += strChar;
+//                }
+//            }
+//        }
+//        else
+//        {
+//            // Find space to split
+//            CString strTestLine = strCurrentLine;
+//            if (!strTestLine.IsEmpty())
+//                strTestLine += _T(" ");
+//            strTestLine += strWord;
+//
+//            if (pDC->GetTextExtent(strTestLine).cx > nMaxWidth && !strCurrentLine.IsEmpty())
+//            {
+//                outLines.Add(strCurrentLine);
+//                strCurrentLine = strWord;
+//            }
+//            else
+//            {
+//                strCurrentLine = strTestLine;
+//            }
+//        }
+//        nPos++;
+//    }
+//
+//    if (!strCurrentLine.IsEmpty())
+//    {
+//        outLines.Add(strCurrentLine);
+//    }
+//}
 
-    CString strCurrentLine = _T("");
-    int nPos = 0;
-    CString strWord;
-
-    while (AfxExtractSubString(strWord, strInput, nPos, _T(' ')))
-    {
-        // 1 word > column width -> split that word
-        if (pDC->GetTextExtent(strWord).cx > nMaxWidth)
-        {
-            if (!strCurrentLine.IsEmpty())
-            {
-                outLines.Add(strCurrentLine);
-                strCurrentLine = _T("");
-            }
-
-            for (int i = 0; i < strWord.GetLength(); i++)
-            {
-                CString strChar = strWord.Mid(i, 1);
-                if (pDC->GetTextExtent(strCurrentLine + strChar).cx > nMaxWidth && !strCurrentLine.IsEmpty())
-                {
-                    outLines.Add(strCurrentLine);
-                    strCurrentLine = strChar;
-                }
-                else
-                {
-                    strCurrentLine += strChar;
-                }
-            }
-        }
-        else
-        {
-            // Find space to split
-            CString strTestLine = strCurrentLine;
-            if (!strTestLine.IsEmpty())
-                strTestLine += _T(" ");
-            strTestLine += strWord;
-
-            if (pDC->GetTextExtent(strTestLine).cx > nMaxWidth && !strCurrentLine.IsEmpty())
-            {
-                outLines.Add(strCurrentLine);
-                strCurrentLine = strWord;
-            }
-            else
-            {
-                strCurrentLine = strTestLine;
-            }
-        }
-        nPos++;
-    }
-
-    if (!strCurrentLine.IsEmpty())
-    {
-        outLines.Add(strCurrentLine);
-    }
-}
-
-// Split list chat in half + timestamp format
 void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strContentOriginal, const CString& strTime)
 {
-    if (!m_listChat.GetSafeHwnd() || !::IsWindow(m_listChat.GetSafeHwnd()))
+    if (!m_richChat.GetSafeHwnd() || !::IsWindow(m_richChat.GetSafeHwnd()))
         return;
 
-    CDC* pDC = m_listChat.GetDC();
-    if (pDC == NULL) return;
-
-    CFont* pFont = m_listChat.GetFont();
-    CFont* pOldFont = NULL;
-    if (pFont != NULL)
-        pOldFont = pDC->SelectObject(pFont);
-
     BOOL bIsMe = (strSender.CompareNoCase(m_strUsername) == 0);
-    int nColIndex = bIsMe ? 1 : 0;
-    int nColWidth = m_listChat.GetColumnWidth(nColIndex);
-    int nMaxWidth = (nColWidth > 20) ? (nColWidth - 20) : 100;
 
-    // [HH:MM]
-    CString strHeader;
-    strHeader.Format(_T("[%s] "), strTime.GetString());
+    // Put pointer to the end of the text
+    LONG nLen = m_richChat.GetTextLength();
+    m_richChat.SetSel(nLen, nLen);
 
-    // Solve new line when long text
-    CStringArray rawLines;
-    int nPos = 0;
-    CString strSub;
+    // Me -> Right; Other -> Left
+    PARAFORMAT2 pf;
+    ZeroMemory(&pf, sizeof(PARAFORMAT2));
+    pf.cbSize = sizeof(PARAFORMAT2);
 
-    CString strInput = strContentOriginal;
-    strInput.Replace(_T("\r\n"), _T("\n"));
-    strInput.Replace(_T("\r"), _T("\n"));
+    pf.dwMask = PFM_ALIGNMENT | PFM_STARTINDENT | PFM_RIGHTINDENT;
+    pf.wAlignment = bIsMe ? PFA_RIGHT : PFA_LEFT;
+    pf.dxStartIndent = 100;
+    pf.dxRightIndent = 100;
+    m_richChat.SetParaFormat(pf);
 
-    while (AfxExtractSubString(strSub, strInput, nPos, _T('\n')))
+    // Font + Color (Name + Timestamp)
+    CHARFORMAT2 cfHeader;
+    ZeroMemory(&cfHeader, sizeof(CHARFORMAT2));
+    cfHeader.cbSize = sizeof(CHARFORMAT2);
+    cfHeader.dwMask = CFM_COLOR | CFM_BOLD | CFM_FACE | CFM_SIZE;
+    cfHeader.dwEffects = CFE_BOLD;          
+    cfHeader.yHeight = 240;                
+    _tcscpy_s(cfHeader.szFaceName, _T("Segoe UI"));
+
+    if (bIsMe)
     {
-        rawLines.Add(strSub);
-        nPos++;
+        cfHeader.crTextColor = RGB(220, 53, 69); // Red
     }
-    if (rawLines.GetCount() == 0)
-        rawLines.Add(strInput);
-
-    BOOL bIsFirstLine = TRUE;
-    for (INT_PTR k = 0; k < rawLines.GetCount(); k++)
+    else
     {
-        CString strLineToWrap = rawLines.GetAt(k);
-        if (bIsFirstLine)
+        cfHeader.crTextColor = RGB(13, 110, 253); // Blue
+    }
+    m_richChat.SetSelectionCharFormat(cfHeader);
+
+    // Header
+    CString strHeader;
+    if (bIsMe)
+        strHeader.Format(_T("Me [%s]\r\n"), strTime.GetString());
+    else
+        strHeader.Format(_T("%s [%s]\r\n"), strSender.GetString(), strTime.GetString());
+
+    m_richChat.ReplaceSel(strHeader);
+
+    // Font + Color (Content)
+    CHARFORMAT2 cfContent;
+    ZeroMemory(&cfContent, sizeof(CHARFORMAT2));
+    cfContent.cbSize = sizeof(CHARFORMAT2);
+    cfContent.dwMask = CFM_COLOR | CFM_BOLD | CFM_FACE | CFM_SIZE;
+    cfContent.dwEffects = 0;                
+    cfContent.crTextColor = RGB(30, 30, 30); 
+    cfContent.yHeight = 240;                 
+    _tcscpy_s(cfContent.szFaceName, _T("Segoe UI"));
+    m_richChat.SetSelectionCharFormat(cfContent);
+
+    // Insert content + spacing
+    CString strBody = strContentOriginal + _T("\r\n\r\n");
+    m_richChat.ReplaceSel(strBody);
+
+    m_richChat.SetSel(-1, -1);
+    m_richChat.SendMessage(EM_SCROLLCARET, 0, 0);
+    m_richChat.PostMessage(WM_VSCROLL, SB_BOTTOM, 0);
+}
+
+BOOL CChatDlg::PreTranslateMessage(MSG* pMsg)
+{
+    // Catch enter event
+    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
+    {
+        CWnd* pEdit = GetDlgItem(IDC_EDIT_MESSAGE);
+        if (pEdit && pMsg->hwnd == pEdit->GetSafeHwnd())
         {
-            strLineToWrap = strHeader + strLineToWrap; // Only use [HH:MM] on first line
-            bIsFirstLine = FALSE;
-        }
-
-        CStringArray lines;
-        WrapMessageToLines(pDC, strLineToWrap, nMaxWidth, lines);
-
-        for (INT_PTR i = 0; i < lines.GetCount(); i++)
-        {
-            CString strLine = lines.GetAt(i);
-            int nRow = -1;
-
-            if (bIsMe)
+            // Case 1: Shift + Enter / Ctrl + Enter -> newline
+            if ((GetKeyState(VK_SHIFT) & 0x8000) || (GetKeyState(VK_CONTROL) & 0x8000))
             {
-                // My chat -> right
-                nRow = m_listChat.InsertItem(m_listChat.GetItemCount(), _T(""));
-                m_listChat.SetItemText(nRow, 1, strLine);
+                CEdit* pEditCtrl = reinterpret_cast<CEdit*>(pEdit);
+                pEditCtrl->ReplaceSel(_T("\r\n"), TRUE); 
+                return TRUE; 
             }
+            // Case 2: Enter -> Send
             else
             {
-                // Others -> left
-                nRow = m_listChat.InsertItem(m_listChat.GetItemCount(), strLine);
-            }
-
-            if (nRow != -1)
-            {
-                m_listChat.EnsureVisible(nRow, FALSE);
+                OnBnClickedBtnSend();
+                return TRUE;
             }
         }
     }
 
-    if (pOldFont != NULL)
-        pDC->SelectObject(pOldFont);
-    m_listChat.ReleaseDC(pDC);
+    return CDialogEx::PreTranslateMessage(pMsg);
 }
