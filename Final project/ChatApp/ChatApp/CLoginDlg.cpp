@@ -72,8 +72,7 @@ BOOL CLoginDlg::OnInitDialog()
 void CLoginDlg::OnBnClickedBtnRegister()
 {
     CRegisterDlg regDlg;
-    if (regDlg.DoModal() == IDOK)
-    {
+    if (regDlg.DoModal() == IDOK){
         AfxMessageBox(_T("Account created succesfully!\nLogin to continue"), MB_OK | MB_ICONINFORMATION);
         SetDlgItemText(IDC_EDIT_USERNAME, regDlg.m_strUsername);
         SetDlgItemText(IDC_EDIT_PASSWORD, _T(""));
@@ -93,20 +92,17 @@ bool CLoginDlg::ConnectToServer()
     hints.ai_protocol = IPPROTO_TCP;
 
     // Server IP + Port
-    if (getaddrinfo("192.168.1.18", "9999", &hints, &result) != 0)
-    {
+    if (getaddrinfo("10.26.82.206", "9999", &hints, &result) != 0){
         return false;
     }
 
     m_hSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if (m_hSocket == INVALID_SOCKET)
-    {
+    if (m_hSocket == INVALID_SOCKET){
         freeaddrinfo(result);
         return false;
     }
 
-    if (connect(m_hSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
-    {
+    if (connect(m_hSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR){
         closesocket(m_hSocket);
         m_hSocket = INVALID_SOCKET;
         freeaddrinfo(result);
@@ -130,15 +126,13 @@ void CLoginDlg::OnBnClickedBtnLogin()
     std::string passA = CW2A(strPass.GetString(), CP_UTF8);
 
     // Check username + password
-    if (!Utils::IsValidUsername(userA) || !Utils::IsValidPassword(passA))
-    {
+    if (!Utils::IsValidUsername(userA) || !Utils::IsValidPassword(passA)){
         AfxMessageBox(_T("Wrong username or password!"),MB_OK | MB_ICONWARNING);
         return;
     }
 
     // Connect to server
-    if (!ConnectToServer())
-    {
+    if (!ConnectToServer()){
         AfxMessageBox(_T("Cannot connect to ChatAppService!"));
         return;
     }
@@ -151,24 +145,21 @@ void CLoginDlg::OnBnClickedBtnLogin()
             {"password", passA}
         }}
     };
-    std::string strReq = req.dump() + '\0';
+    std::string strReq = req.dump();
     send(m_hSocket, strReq.c_str(), static_cast<int>(strReq.length()) + 1, 0);
 
     // Receive JSON reply
     char szBuf[1024] = { 0 };
     int nRecv = recv(m_hSocket, szBuf, sizeof(szBuf) - 1, 0);
-    if (nRecv > 0)
-    {
+    if (nRecv > 0){
         try {
             auto res = json::parse(szBuf);
-            if (res.value("status", "") == "success")
-            {
+            if (res.value("status", "") == "success"){
                 m_strUsername = strUser;
                 CDialogEx::OnOK();
                 return;
             }
-            else
-            {
+            else{
                 std::string msg = res.value("message", "Login fails!");
                 AfxMessageBox(CA2T(msg.c_str(), CP_UTF8), MB_OK | MB_ICONWARNING);
             }
@@ -177,8 +168,7 @@ void CLoginDlg::OnBnClickedBtnLogin()
             AfxMessageBox(_T("Invalid server reply!"));
         }
     }
-    if (m_hSocket != INVALID_SOCKET)
-    {
+    if (m_hSocket != INVALID_SOCKET) {
         closesocket(m_hSocket);
         m_hSocket = INVALID_SOCKET;
     }
@@ -186,8 +176,7 @@ void CLoginDlg::OnBnClickedBtnLogin()
 
 void CLoginDlg::OnCancel()
 {
-    if (m_hSocket != INVALID_SOCKET)
-    {
+    if (m_hSocket != INVALID_SOCKET){
         closesocket(m_hSocket);
         m_hSocket = INVALID_SOCKET;
     }

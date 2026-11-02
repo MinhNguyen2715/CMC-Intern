@@ -76,24 +76,21 @@ bool CRegisterDlg::ConnectAndRegister(const std::string& username, const std::st
     hints.ai_protocol = IPPROTO_TCP;
 
     // Server IP + Port
-    if (getaddrinfo("192.168.1.18", "9999", &hints, &result) != 0)
-    {
+    if (getaddrinfo("10.26.82.206", "9999", &hints, &result) != 0){
         outMsg = "Cannot connect to server!";
         return false;
     }
 
     // Initiate socket
     SOCKET hSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-    if (hSocket == INVALID_SOCKET)
-    {
+    if (hSocket == INVALID_SOCKET){
         freeaddrinfo(result);
         outMsg = "Cannot initiate socket!";
         return false;
     }
 
     // Connect to Server
-    if (connect(hSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR)
-    {
+    if (connect(hSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR){
         closesocket(hSocket);
         freeaddrinfo(result);
         outMsg = "Cannot connect to ChatAppService!";
@@ -111,7 +108,7 @@ bool CRegisterDlg::ConnectAndRegister(const std::string& username, const std::st
         }}
     };
 
-    std::string strReq = req.dump() + '\0';
+    std::string strReq = req.dump();
     send(hSocket, strReq.c_str(), static_cast<int>(strReq.length()) + 1, 0);
 
     // Receive JSON reply
@@ -121,8 +118,7 @@ bool CRegisterDlg::ConnectAndRegister(const std::string& username, const std::st
     shutdown(hSocket, SD_BOTH);
     closesocket(hSocket);
 
-    if (nRecv > 0)
-    {
+    if (nRecv > 0){
         szBuf[nRecv] = '\0';
         try {
             auto res = json::parse(szBuf);
@@ -155,35 +151,31 @@ void CRegisterDlg::OnBnClickedBtnSubmitRegister()
     std::string confirmA = CW2A(strConfirmPass.GetString(), CP_UTF8);
 
     // Check username + password
-    if (!Utils::IsValidUsername(userA))
-    {
+    if (!Utils::IsValidUsername(userA)){
         AfxMessageBox(_T("Invalid username format!\n(8-20 charecters, numbers or underscore)"), MB_OK | MB_ICONWARNING);
         return;
     }
 
-    if (!Utils::IsValidPassword(passA))
-    {
+    if (!Utils::IsValidPassword(passA)){
         AfxMessageBox(_T("Invalid password format!\n(8-32 characters, no spaces)"), MB_OK | MB_ICONWARNING);
         return;
     }
 
     // Checkn confirm password
-    if (passA != confirmA)
-    {
+    if (passA != confirmA){
         AfxMessageBox(_T("Passwords do not match!"), MB_OK | MB_ICONWARNING);
         return;
     }
 
     // Send to ChatAppService to save into database
     std::string serverMsg;
-    if (ConnectAndRegister(userA, passA, serverMsg))
-    {
+    if (ConnectAndRegister(userA, passA, serverMsg)){
         m_strUsername = strUser;
         AfxMessageBox(CA2T(serverMsg.c_str()), MB_OK | MB_ICONINFORMATION);
         EndDialog(IDOK); 
     }
-    else
-    {
+
+    else {
         AfxMessageBox(CA2T(serverMsg.c_str()));
     }
 }

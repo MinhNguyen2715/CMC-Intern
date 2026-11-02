@@ -19,7 +19,7 @@ namespace Utils
         return std::regex_match(password, pattern);
     }
 
-    // Generate MD5 hash using stbrumme/hash-library
+    // Generate MD5 hash
     inline std::string GetMD5Hash(const std::string& input)
     {
         MD5 md5;

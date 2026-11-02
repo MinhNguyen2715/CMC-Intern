@@ -50,7 +50,7 @@ BOOL CChatDlg::OnInitDialog()
     m_listUser.SetFont(&m_fontUI);
     m_richChat.SetFont(&m_fontUI);
 
-    m_richChat.SetTargetDevice(NULL, 0);
+    m_richChat.SendMessage(EM_SETTARGETDEVICE, 0, 0);
 
     if (GetDlgItem(IDC_EDIT_MESSAGE))
         GetDlgItem(IDC_EDIT_MESSAGE)->SetFont(&m_fontUI);
@@ -158,7 +158,6 @@ void CChatDlg::ToggleChatUI(BOOL bShow)
     if (GetDlgItem(IDC_BTN_SEND))      GetDlgItem(IDC_BTN_SEND)->ShowWindow(nCmdShow);
 }
 
-// Hàm hỗ trợ nạp ảnh PNG từ Resource type "PNG" trong file .exe
 bool LoadPNGFromResource(CImage& img, UINT nID)
 {
     HINSTANCE hInst = AfxGetInstanceHandle();
@@ -236,14 +235,11 @@ void CChatDlg::InitUserListControl()
         {
             CDC dcMem;
             dcMem.CreateCompatibleDC(&dcScreen);
-
             CBitmap bmp;
             bmp.CreateCompatibleBitmap(&dcScreen, 48, 48);
             CBitmap* pOldBmp = dcMem.SelectObject(&bmp);
-
             dcMem.SetStretchBltMode(HALFTONE);
             img.Draw(dcMem.GetSafeHdc(), 0, 0, 48, 48);
-
             dcMem.SelectObject(pOldBmp);
             m_imgListUser.Add(&bmp, (COLORREF)CLR_NONE);
         }
@@ -273,32 +269,13 @@ int GetAvatarIndexByUsername(const CString& username)
     return 0; // Default Avatar
 }
 
-//void CChatDlg::InitChatListControl()
-//{
-//    if (!m_listChat.GetSafeHwnd() || !::IsWindow(m_listChat.GetSafeHwnd())) return;
-//
-//    // Hide header + select full row
-//    m_listChat.ModifyStyle(0, LVS_NOCOLUMNHEADER);
-//    m_listChat.SetExtendedStyle(LVS_EX_FULLROWSELECT);
-//
-//    // 2 columns
-//    CRect rectChat;
-//    m_listChat.GetClientRect(&rectChat);
-//    int nColWidth = (rectChat.Width() - 25) / 2;
-//    if (nColWidth < 100) nColWidth = 100;
-//
-//    m_listChat.InsertColumn(0, _T("Partner"), LVCFMT_LEFT, nColWidth);   
-//    m_listChat.InsertColumn(1, _T("Me"), LVCFMT_RIGHT, nColWidth);        
-//}
-
 void CChatDlg::OnNMClickListUser(NMHDR* pNMHDR, LRESULT* pResult)
 {
     LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
     *pResult = 0;
 
     int nItem = pNMItemActivate->iItem;
-    if (nItem != -1) // Select 1 user
-    {
+    if (nItem != -1){ // Select 1 user 
         m_strSelectedUser = m_listUser.GetItemText(nItem, 0);
 
         // Show chat
@@ -314,7 +291,7 @@ void CChatDlg::OnNMClickListUser(NMHDR* pNMHDR, LRESULT* pResult)
 void CChatDlg::RequestUserList()
 {
     json req = { {"action", "get_users"} };
-    std::string strReq = req.dump() + '\0';
+    std::string strReq = req.dump();
     send(m_hSocket, strReq.c_str(), static_cast<int>(strReq.length()) + 1, 0);
 }
 
@@ -327,7 +304,7 @@ void CChatDlg::RequestChatHistory(const CString& withUser)
             {"with_user", CW2A(withUser.GetString(), CP_UTF8)}
         }}
     };
-    std::string strReq = req.dump() + '\0';
+    std::string strReq = req.dump();
     send(m_hSocket, strReq.c_str(), static_cast<int>(strReq.length()) + 1, 0);
 }
 
@@ -350,7 +327,7 @@ void CChatDlg::OnBnClickedBtnSend()
         }}
     };
 
-    std::string strReq = req.dump() + '\0';
+    std::string strReq = req.dump();
     send(m_hSocket, strReq.c_str(), static_cast<int>(strReq.length()) + 1, 0);
 
     // Show on list chat
@@ -375,30 +352,25 @@ DWORD WINAPI CChatDlg::ReceiverThreadProc(LPVOID lpParam)
     std::string accumulatedBuffer;
     char szChunk[1024] = { 0 };
 
-    while (pDlg->m_bRunning && pDlg->m_hSocket != INVALID_SOCKET)
-    {
+    while (pDlg->m_bRunning && pDlg->m_hSocket != INVALID_SOCKET){
         int nBytesRecv = recv(pDlg->m_hSocket, szChunk, sizeof(szChunk) - 1, 0);
-        if (nBytesRecv > 0)
-        {
+        if (nBytesRecv > 0){
             szChunk[nBytesRecv] = '\0';
             accumulatedBuffer.append(szChunk, nBytesRecv);
 
             size_t nullPos = 0;
-            while ((nullPos = accumulatedBuffer.find('\0')) != std::string::npos)
-            {
+            while ((nullPos = accumulatedBuffer.find('\0')) != std::string::npos){
                 std::string rawJson = accumulatedBuffer.substr(0, nullPos);
                 accumulatedBuffer.erase(0, nullPos + 1);
 
-                if (!rawJson.empty())
-                {
+                if (!rawJson.empty()){
                     std::string* pStrData = new std::string(rawJson);
                     pDlg->PostMessage(WM_RECV_JSON, 0, reinterpret_cast<LPARAM>(pStrData));
                 }
             }
             ZeroMemory(szChunk, sizeof(szChunk));
         }
-        else
-        {
+        else{
             break;
         }
     }
@@ -411,31 +383,25 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
     std::string* pRawJson = reinterpret_cast<std::string*>(lParam);
     if (!pRawJson) return 0;
 
-    if (!::IsWindow(m_hWnd))
-    {
+    if (!::IsWindow(m_hWnd)){
         delete pRawJson;
         return 0;
     }
 
-    try
-    {
+    try{
         auto res = json::parse(*pRawJson);
         std::string action = res.value("action", "");
         std::string status = res.value("status", "");
 
         // Load user list from db into IDC_LIST_USER
-        if (action == "get_users_res" && status == "success")
-        { 
-            if (m_listUser.GetSafeHwnd() && ::IsWindow(m_listUser.GetSafeHwnd()))
-            {
+        if (action == "get_users_res" && status == "success"){ 
+            if (m_listUser.GetSafeHwnd() && ::IsWindow(m_listUser.GetSafeHwnd())){
                 m_listUser.DeleteAllItems();
                 auto users = res["data"].value("users", std::vector<std::string>());
                 int index = 0;
-                for (const auto& user : users)
-                {
+                for (const auto& user : users){
                     CString strUser(CA2T(user.c_str(), CP_UTF8));
                     int avatarIndex = GetAvatarIndexByUsername(strUser);
-
                     m_listUser.InsertItem(index, strUser, avatarIndex);
                     m_listUser.SetItemText(index, 1, _T(""));
                     m_listUser.SetItemText(index, 2, _T(""));
@@ -445,15 +411,14 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
                 }
             }
         } 
+
         // Load chat history
-        else if (action == "get_chat_history_res" && status == "success")
-        {
+        else if (action == "get_chat_history_res" && status == "success"){
             std::string withUser = res["data"].value("with_user", "");
             CString strWithUser(CA2T(withUser.c_str(), CP_UTF8));
             auto messages = res["data"]["messages"];
 
-            if (messages.size() > 0)
-            {
+            if (messages.size() > 0){
                 auto lastMsg = messages.back();
                 std::string lastContent = lastMsg.value("content", "");
                 int64_t lastTs = lastMsg.value("timestamp", (int64_t)0);
@@ -464,13 +429,11 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
                 UpdateUserLastMessage(strWithUser, strLastContent, strLastTime);
             }
 
-            if (strWithUser.CompareNoCase(m_strSelectedUser) == 0 && m_richChat.GetSafeHwnd() && ::IsWindow(m_richChat.GetSafeHwnd()))
-            {
+            if (strWithUser.CompareNoCase(m_strSelectedUser) == 0 && m_richChat.GetSafeHwnd() && ::IsWindow(m_richChat.GetSafeHwnd())){
                 m_richChat.SetRedraw(FALSE);
                 m_richChat.SetWindowText(_T(""));
 
-                for (const auto& msg : messages)
-                {
+                for (const auto& msg : messages){
                     std::string sender = msg.value("sender", "");
                     std::string content = msg.value("content", "");
                     int64_t ts = msg.value("timestamp", (int64_t)0);
@@ -487,8 +450,7 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
             }
         }
         // Real time receive mesg
-        else if (action == "receive_msg")
-        {
+        else if (action == "receive_msg"){
             std::string fromUser = res["data"].value("from", "");
             std::string content = res["data"].value("content", "");
             int64_t ts = res["data"].value("timestamp", (int64_t)std::time(nullptr));
@@ -499,8 +461,7 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
             CString strTime = FormatTimestamp(ts);
             CString strTimeList = FormatUserListTimestamp(ts);
 
-            if (strFromUser.CompareNoCase(m_strSelectedUser) == 0 && m_richChat.GetSafeHwnd() && ::IsWindow(m_richChat.GetSafeHwnd()))
-            {
+            if (strFromUser.CompareNoCase(m_strSelectedUser) == 0 && m_richChat.GetSafeHwnd() && ::IsWindow(m_richChat.GetSafeHwnd())){
                 AppendChatMessage(strFromUser, strContent, strTime);
             }
             UpdateUserLastMessage(strFromUser, strContent, strTimeList);
@@ -515,15 +476,13 @@ void CChatDlg::OnCancel()
 {
     m_bRunning = FALSE;
 
-    if (m_hSocket != INVALID_SOCKET)
-    {
+    if (m_hSocket != INVALID_SOCKET){
         shutdown(m_hSocket, SD_BOTH);
         closesocket(m_hSocket);
         m_hSocket = INVALID_SOCKET;
     }
 
-    if (m_hRecvThread)
-    {
+    if (m_hRecvThread){
         WaitForSingleObject(m_hRecvThread, 1000);
         CloseHandle(m_hRecvThread);
         m_hRecvThread = NULL;
@@ -536,10 +495,8 @@ void CChatDlg::UpdateUserLastMessage(const CString& strUser, const CString& strM
 {
     if (!m_listUser.GetSafeHwnd() || !::IsWindow(m_listUser.GetSafeHwnd())) return;
 
-    for (int i = 0; i < m_listUser.GetItemCount(); ++i)
-    {
-        if (m_listUser.GetItemText(i, 0).CompareNoCase(strUser) == 0)
-        {
+    for (int i = 0; i < m_listUser.GetItemCount(); ++i){
+        if (m_listUser.GetItemText(i, 0).CompareNoCase(strUser) == 0){
             m_listUser.SetItemText(i, 1, strMsg); // 1: Preview
             m_listUser.SetItemText(i, 2, strTime); // 2: Time
             break;
@@ -568,8 +525,7 @@ CString CChatDlg::FormatUserListTimestamp(int64_t ts)
         // Same date -> show HH:MM
         return time.Format(_T("%H:%M"));
     }
-    else
-    {
+    else{
         // Different date -> show D/M/Y
         return time.Format(_T("%d/%m/%Y"));
     }
@@ -579,72 +535,6 @@ void CChatDlg::OnOK()
 {
     OnBnClickedBtnSend();
 }
-
-//// Calculate new line
-//void CChatDlg::WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWidth, CStringArray& outLines)
-//{
-//    outLines.RemoveAll();
-//    if (strInput.IsEmpty() || nMaxWidth <= 0 || pDC == NULL)
-//    {
-//        outLines.Add(strInput);
-//        return;
-//    }
-//
-//    CString strCurrentLine = _T("");
-//    int nPos = 0;
-//    CString strWord;
-//
-//    while (AfxExtractSubString(strWord, strInput, nPos, _T(' ')))
-//    {
-//        // 1 word > column width -> split that word
-//        if (pDC->GetTextExtent(strWord).cx > nMaxWidth)
-//        {
-//            if (!strCurrentLine.IsEmpty())
-//            {
-//                outLines.Add(strCurrentLine);
-//                strCurrentLine = _T("");
-//            }
-//
-//            for (int i = 0; i < strWord.GetLength(); i++)
-//            {
-//                CString strChar = strWord.Mid(i, 1);
-//                if (pDC->GetTextExtent(strCurrentLine + strChar).cx > nMaxWidth && !strCurrentLine.IsEmpty())
-//                {
-//                    outLines.Add(strCurrentLine);
-//                    strCurrentLine = strChar;
-//                }
-//                else
-//                {
-//                    strCurrentLine += strChar;
-//                }
-//            }
-//        }
-//        else
-//        {
-//            // Find space to split
-//            CString strTestLine = strCurrentLine;
-//            if (!strTestLine.IsEmpty())
-//                strTestLine += _T(" ");
-//            strTestLine += strWord;
-//
-//            if (pDC->GetTextExtent(strTestLine).cx > nMaxWidth && !strCurrentLine.IsEmpty())
-//            {
-//                outLines.Add(strCurrentLine);
-//                strCurrentLine = strWord;
-//            }
-//            else
-//            {
-//                strCurrentLine = strTestLine;
-//            }
-//        }
-//        nPos++;
-//    }
-//
-//    if (!strCurrentLine.IsEmpty())
-//    {
-//        outLines.Add(strCurrentLine);
-//    }
-//}
 
 void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strContentOriginal, const CString& strTime)
 {
@@ -677,12 +567,10 @@ void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strCon
     cfHeader.yHeight = 240;                
     _tcscpy_s(cfHeader.szFaceName, _T("Segoe UI"));
 
-    if (bIsMe)
-    {
+    if (bIsMe){
         cfHeader.crTextColor = RGB(220, 53, 69); // Red
     }
-    else
-    {
+    else{
         cfHeader.crTextColor = RGB(13, 110, 253); // Blue
     }
     m_richChat.SetSelectionCharFormat(cfHeader);
@@ -719,26 +607,21 @@ void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strCon
 BOOL CChatDlg::PreTranslateMessage(MSG* pMsg)
 {
     // Catch enter event
-    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
-    {
+    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN){
         CWnd* pEdit = GetDlgItem(IDC_EDIT_MESSAGE);
-        if (pEdit && pMsg->hwnd == pEdit->GetSafeHwnd())
-        {
+        if (pEdit && pMsg->hwnd == pEdit->GetSafeHwnd()){
             // Case 1: Shift + Enter / Ctrl + Enter -> newline
-            if ((GetKeyState(VK_SHIFT) & 0x8000) || (GetKeyState(VK_CONTROL) & 0x8000))
-            {
+            if ((GetKeyState(VK_SHIFT) & 0x8000) || (GetKeyState(VK_CONTROL) & 0x8000)){
                 CEdit* pEditCtrl = reinterpret_cast<CEdit*>(pEdit);
                 pEditCtrl->ReplaceSel(_T("\r\n"), TRUE); 
                 return TRUE; 
             }
             // Case 2: Enter -> Send
-            else
-            {
+            else {
                 OnBnClickedBtnSend();
                 return TRUE;
             }
         }
     }
-
     return CDialogEx::PreTranslateMessage(pMsg);
 }

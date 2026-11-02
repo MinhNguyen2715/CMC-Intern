@@ -30,7 +30,7 @@ VOID ReportSvcStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHi
 BOOL InstallService();
 BOOL UninstallService();
 
-// Network & Worker thread functions
+// Network & thread functions
 DWORD WINAPI TcpServerThread(LPVOID lpParam);
 DWORD WINAPI ClientWorkerThread(LPVOID lpParam);
 std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, std::string& outAuthenticatedUser);

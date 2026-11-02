@@ -12,7 +12,7 @@ SOCKET                g_listenSocket = INVALID_SOCKET;
 
 // Thread-safe active sessions management (Username -> SOCKET)
 std::map<std::string, SOCKET> g_activeUsers;
-std::vector<SOCKET>           g_clientSockets; // Track all client sockets for cleanup
+std::vector<SOCKET>           g_clientSockets; 
 CRITICAL_SECTION              g_csClients;
 
 DatabaseManager               g_dbManager;
@@ -202,7 +202,7 @@ std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, 
                     {"status", "fail"},
                     {"message", "Invalid username! Must be 8-20 alphanumeric characters or underscores."}
                 };
-                return response.dump() + '\0';
+                return response.dump();
             }
 
             if (!Utils::IsValidPassword(password))
@@ -212,7 +212,7 @@ std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, 
                     {"status", "fail"},
                     {"message", "Invalid password! Must be 8-32 characters without spaces."}
                 };
-                return response.dump() + '\0';
+                return response.dump();
             }
 
             if (g_dbManager.RegisterUser(username, password))
@@ -252,7 +252,7 @@ std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, 
                         {"status", "fail"},
                         {"message", "User is already logged in."}
                     };
-                    return response.dump() + '\0';
+                    return response.dump();
                 }
 
                 if (!outAuthenticatedUser.empty())
@@ -328,7 +328,7 @@ std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, 
                         }}
                     };
 
-                    std::string forwardStr = forwardMsg.dump() + '\0';
+                    std::string forwardStr = forwardMsg.dump();
                     send(targetSocket, forwardStr.c_str(), static_cast<int>(forwardStr.length()) + 1, 0);
                 }
 
@@ -421,7 +421,7 @@ std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, 
         };
     }
 
-    return response.dump() + '\0';
+    return response.dump();   
 }
 
 // Remove client socket and active user mapping
@@ -463,7 +463,7 @@ DWORD WINAPI ClientWorkerThread(LPVOID lpParam)
         int nBytesRecv = recv(clientSocket, szChunk, sizeof(szChunk) - 1, 0);
         if (nBytesRecv > 0)
         {
-            szChunk[nBytesRecv] = '\0';
+            szChunk[nBytesRecv] = '\0'; // assign to avoid error
             accumulatedBuffer.append(szChunk, nBytesRecv);
 
             // Process full JSON messages delimited by null-terminator '\0'
@@ -486,7 +486,7 @@ DWORD WINAPI ClientWorkerThread(LPVOID lpParam)
         }
         else
         {
-            break; // Connection closed or socket error
+            break; // Connection closed / socket error
         }
     }
 
