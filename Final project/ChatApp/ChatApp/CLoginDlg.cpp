@@ -92,7 +92,7 @@ bool CLoginDlg::ConnectToServer()
     hints.ai_protocol = IPPROTO_TCP;
 
     // Server IP + Port
-    if (getaddrinfo("10.26.82.206", "9999", &hints, &result) != 0){
+    if (getaddrinfo(SERVER_IP, SERVER_PORT, &hints, &result) != 0){
         return false;
     }
 

@@ -76,7 +76,7 @@ bool CRegisterDlg::ConnectAndRegister(const std::string& username, const std::st
     hints.ai_protocol = IPPROTO_TCP;
 
     // Server IP + Port
-    if (getaddrinfo("10.26.82.206", "9999", &hints, &result) != 0){
+    if (getaddrinfo(SERVER_IP, SERVER_PORT, &hints, &result) != 0){
         outMsg = "Cannot connect to server!";
         return false;
     }
