@@ -38,7 +38,6 @@ BOOL CRegisterDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
 
-    // Title font
     m_fontTitle.CreatePointFont(140, _T("Segoe UI"));
     LOGFONT lf;
     m_fontTitle.GetLogFont(&lf);
@@ -46,10 +45,8 @@ BOOL CRegisterDlg::OnInitDialog()
     m_fontTitle.DeleteObject();
     m_fontTitle.CreateFontIndirect(&lf);
 
-    // Normal font
     m_fontNormal.CreatePointFont(100, _T("Segoe UI"));
 
-    // Assign font
     if (GetDlgItem(IDC_STATIC_REG_TITLE))
         GetDlgItem(IDC_STATIC_REG_TITLE)->SetFont(&m_fontTitle);
 
@@ -67,7 +64,6 @@ BOOL CRegisterDlg::OnInitDialog()
     return TRUE;
 }
 
-// Temporarily connect to server to send register request
 bool CRegisterDlg::ConnectAndRegister(const std::string& username, const std::string& password, std::string& outMsg)
 {
     struct addrinfo hints = { 0 }, * result = NULL;
@@ -75,13 +71,11 @@ bool CRegisterDlg::ConnectAndRegister(const std::string& username, const std::st
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-    // Server IP + Port
     if (getaddrinfo(SERVER_IP, SERVER_PORT, &hints, &result) != 0){
         outMsg = "Cannot connect to server!";
         return false;
     }
 
-    // Initiate socket
     SOCKET hSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (hSocket == INVALID_SOCKET){
         freeaddrinfo(result);
@@ -89,7 +83,6 @@ bool CRegisterDlg::ConnectAndRegister(const std::string& username, const std::st
         return false;
     }
 
-    // Connect to Server
     if (connect(hSocket, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR){
         closesocket(hSocket);
         freeaddrinfo(result);
@@ -99,7 +92,6 @@ bool CRegisterDlg::ConnectAndRegister(const std::string& username, const std::st
 
     freeaddrinfo(result);
 
-    // Send JSON register request
     json req = {
         {"action", "register"},
         {"data", {
@@ -111,7 +103,6 @@ bool CRegisterDlg::ConnectAndRegister(const std::string& username, const std::st
     std::string strReq = req.dump();
     send(hSocket, strReq.c_str(), static_cast<int>(strReq.length()) + 1, 0);
 
-    // Receive JSON reply
     char szBuf[1024] = { 0 };
     int nRecv = recv(hSocket, szBuf, sizeof(szBuf) - 1, 0);
 
@@ -150,7 +141,6 @@ void CRegisterDlg::OnBnClickedBtnSubmitRegister()
     std::string passA = CW2A(strPass.GetString(), CP_UTF8);
     std::string confirmA = CW2A(strConfirmPass.GetString(), CP_UTF8);
 
-    // Check username + password
     if (!Utils::IsValidUsername(userA)){
         AfxMessageBox(_T("Invalid username format!\n(8-20 charecters, numbers or underscore)"), MB_OK | MB_ICONWARNING);
         return;
@@ -161,13 +151,11 @@ void CRegisterDlg::OnBnClickedBtnSubmitRegister()
         return;
     }
 
-    // Checkn confirm password
     if (passA != confirmA){
         AfxMessageBox(_T("Passwords do not match!"), MB_OK | MB_ICONWARNING);
         return;
     }
 
-    // Send to ChatAppService to save into database
     std::string serverMsg;
     if (ConnectAndRegister(userA, passA, serverMsg)){
         m_strUsername = strUser;

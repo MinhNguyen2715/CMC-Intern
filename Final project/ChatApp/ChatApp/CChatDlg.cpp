@@ -88,12 +88,11 @@ void CChatDlg::OnSize(UINT nType, int cx, int cy)
 {
     CDialogEx::OnSize(nType, cx, cy);
 
-    // Avoid recalculate when minimize + not init HWND
     if (nType == SIZE_MINIMIZED || cx <= 0 || cy <= 0 || !::IsWindow(m_hWnd)) return;
 
     int margin = 10;        
-    int spacing = 10;       // Control spacing
-    int inputHeight = 60;   // Edit box + Send btn high
+    int spacing = 10;       
+    int inputHeight = 60;   
 
     // List User: 25% width
     int leftWidth = static_cast<int>(cx * 0.25);
@@ -112,24 +111,21 @@ void CChatDlg::OnSize(UINT nType, int cx, int cy)
         int msgColWidth = leftWidth - userColWidth - timeColWidth - 8;
         if (msgColWidth < 50) msgColWidth = 50;
 
-        m_listUser.SetColumnWidth(0, userColWidth);  // 0: Name & Avatar
-        m_listUser.SetColumnWidth(1, msgColWidth);   // 1: Preview
-        m_listUser.SetColumnWidth(2, timeColWidth);  // 2: Date / Time
+        m_listUser.SetColumnWidth(0, userColWidth);  
+        m_listUser.SetColumnWidth(1, msgColWidth);   
+        m_listUser.SetColumnWidth(2, timeColWidth);  
     }
 
-    // List chat
     if (m_richChat.GetSafeHwnd() && ::IsWindow(m_richChat.GetSafeHwnd()))
     {
         m_richChat.MoveWindow(margin + leftWidth + spacing, margin, rightWidth, chatHeight);
 
-        // Add padding to margin
         CRect rect;
         m_richChat.GetClientRect(&rect);
         rect.DeflateRect(15, 10, 15, 10);
         m_richChat.SetRect(&rect);
     }
 
-    // Edit box
     CWnd* pEdit = GetDlgItem(IDC_EDIT_MESSAGE);
     if (pEdit && pEdit->GetSafeHwnd())
     {
@@ -138,7 +134,6 @@ void CChatDlg::OnSize(UINT nType, int cx, int cy)
         pEdit->MoveWindow(margin + leftWidth + spacing, margin + chatHeight + spacing, editWidth, inputHeight);
     }
 
-    // Send button
     CWnd* pBtn = GetDlgItem(IDC_BTN_SEND);
     if (pBtn && pBtn->GetSafeHwnd())
     {
@@ -196,16 +191,11 @@ void CChatDlg::InitUserListControl()
 {
     if (!m_listUser.GetSafeHwnd() || !::IsWindow(m_listUser.GetSafeHwnd())) return;
 
-    // Hide header, show selected highlight
     m_listUser.ModifyStyle(0, LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS);
     m_listUser.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_SUBITEMIMAGES);
-
-    // Init 3 columns (Name + Avatar, last msg, time)
     m_listUser.InsertColumn(0, _T("User"), LVCFMT_LEFT, 130);
     m_listUser.InsertColumn(1, _T("LastMsg"), LVCFMT_LEFT, 80);
     m_listUser.InsertColumn(2, _T("Time"), LVCFMT_RIGHT, 65);
-
-    // ImageList 48x48, 32-bit colour
     m_imgListUser.Create(48, 48, ILC_COLOR32 | ILC_MASK, 5, 5);
 
     std::vector<UINT> avatarResIDs = {
@@ -224,8 +214,6 @@ void CChatDlg::InitUserListControl()
     {
         CImage img;
         bool bLoaded = false;
-
-        // Load from resource
         if (LoadPNGFromResource(img, avatarResIDs[i]))
         {
             bLoaded = true;
@@ -245,7 +233,6 @@ void CChatDlg::InitUserListControl()
         }
         else
         {
-            // Load default icon if fault
             HICON hDefault = ::LoadIcon(NULL, IDI_APPLICATION);
             m_imgListUser.Add(hDefault);
         }
@@ -259,35 +246,29 @@ int GetAvatarIndexByUsername(const CString& username)
     CString strUpper = username;
     strUpper.MakeUpper();
 
-    if (strUpper.Find(_T("RED")) != -1)    return 0; // red.png
-    if (strUpper.Find(_T("BLUE")) != -1)   return 1; // blue.jpg
-    if (strUpper.Find(_T("YELLOW")) != -1) return 2; // yellow.png
-    if (strUpper.Find(_T("GREEN")) != -1)  return 3; // green.jpg
-    if (strUpper.Find(_T("ORANGE")) != -1) return 4; // orange.png
+    if (strUpper.Find(_T("RED")) != -1)    return 0; 
+    if (strUpper.Find(_T("BLUE")) != -1)   return 1; 
+    if (strUpper.Find(_T("YELLOW")) != -1) return 2; 
+    if (strUpper.Find(_T("GREEN")) != -1)  return 3; 
+    if (strUpper.Find(_T("ORANGE")) != -1) return 4; 
     if (strUpper.Find(_T("ADMIN")) != -1) return 5;
 
-    return 0; // Default Avatar
+    return 0; // Default avatar
 }
 
 void CChatDlg::OnNMClickListUser(NMHDR* pNMHDR, LRESULT* pResult)
 {
     LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
     *pResult = 0;
-
     int nItem = pNMItemActivate->iItem;
-    if (nItem != -1){ // Select 1 user 
+    if (nItem != -1){ 
         m_strSelectedUser = m_listUser.GetItemText(nItem, 0);
-
-        // Show chat
         ToggleChatUI(TRUE);
-
         m_richChat.SetWindowText(_T(""));
-
         RequestChatHistory(m_strSelectedUser);
     }
 }
 
-// Request users list from db
 void CChatDlg::RequestUserList()
 {
     json req = { {"action", "get_users"} };
@@ -295,7 +276,6 @@ void CChatDlg::RequestUserList()
     send(m_hSocket, strReq.c_str(), static_cast<int>(strReq.length()) + 1, 0);
 }
 
-// Request chat history from db
 void CChatDlg::RequestChatHistory(const CString& withUser)
 {
     json req = {
@@ -311,14 +291,12 @@ void CChatDlg::RequestChatHistory(const CString& withUser)
 void CChatDlg::OnBnClickedBtnSend()
 {
     if (m_strSelectedUser.IsEmpty()) return;
-
     CString strMsg;
     GetDlgItemText(IDC_EDIT_MESSAGE, strMsg);
     strMsg.Trim();
 
     if (strMsg.IsEmpty()) return;
 
-    // Sned JSON send_msg to m_strSelectedUser
     json req = {
         {"action", "send_msg"},
         {"data", {
@@ -330,22 +308,16 @@ void CChatDlg::OnBnClickedBtnSend()
     std::string strReq = req.dump();
     send(m_hSocket, strReq.c_str(), static_cast<int>(strReq.length()) + 1, 0);
 
-    // Show on list chat
     CTime now = CTime::GetCurrentTime();
     int64_t currentTs = now.GetTime();
-    
     CString strTimeFull = FormatTimestamp(currentTs);
     AppendChatMessage(m_strUsername, strMsg, strTimeFull);
-
-    // Update preview
     CString strTimeList = FormatUserListTimestamp(currentTs);
     UpdateUserLastMessage(m_strSelectedUser, strMsg, strTimeList);
 
     SetDlgItemText(IDC_EDIT_MESSAGE, _T(""));
 }
 
-
-// Receiver thread listens to socket
 DWORD WINAPI CChatDlg::ReceiverThreadProc(LPVOID lpParam)
 {
     CChatDlg* pDlg = reinterpret_cast<CChatDlg*>(lpParam);
@@ -377,7 +349,6 @@ DWORD WINAPI CChatDlg::ReceiverThreadProc(LPVOID lpParam)
     return 0;
 }
 
-// Handle JSON received from thread
 LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
 {
     std::string* pRawJson = reinterpret_cast<std::string*>(lParam);
@@ -393,7 +364,6 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
         std::string action = res.value("action", "");
         std::string status = res.value("status", "");
 
-        // Load user list from db into IDC_LIST_USER
         if (action == "get_users_res" && status == "success"){ 
             if (m_listUser.GetSafeHwnd() && ::IsWindow(m_listUser.GetSafeHwnd())){
                 m_listUser.DeleteAllItems();
@@ -412,7 +382,6 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
             }
         } 
 
-        // Load chat history
         else if (action == "get_chat_history_res" && status == "success"){
             std::string withUser = res["data"].value("with_user", "");
             CString strWithUser(CA2T(withUser.c_str(), CP_UTF8));
@@ -449,7 +418,7 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
                 m_richChat.PostMessage(WM_VSCROLL, SB_BOTTOM, 0);
             }
         }
-        // Real time receive mesg
+
         else if (action == "receive_msg"){
             std::string fromUser = res["data"].value("from", "");
             std::string content = res["data"].value("content", "");
@@ -497,8 +466,8 @@ void CChatDlg::UpdateUserLastMessage(const CString& strUser, const CString& strM
 
     for (int i = 0; i < m_listUser.GetItemCount(); ++i){
         if (m_listUser.GetItemText(i, 0).CompareNoCase(strUser) == 0){
-            m_listUser.SetItemText(i, 1, strMsg); // 1: Preview
-            m_listUser.SetItemText(i, 2, strTime); // 2: Time
+            m_listUser.SetItemText(i, 1, strMsg); 
+            m_listUser.SetItemText(i, 2, strTime); 
             break;
         }
     }
@@ -517,16 +486,13 @@ CString CChatDlg::FormatUserListTimestamp(int64_t ts)
     CTime time(ts);
     CTime now = CTime::GetCurrentTime();
 
-    // Compare date with now
     if (time.GetYear() == now.GetYear() &&
         time.GetMonth() == now.GetMonth() &&
         time.GetDay() == now.GetDay())
     {
-        // Same date -> show HH:MM
         return time.Format(_T("%H:%M"));
     }
     else{
-        // Different date -> show D/M/Y
         return time.Format(_T("%d/%m/%Y"));
     }
 }
@@ -542,12 +508,9 @@ void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strCon
         return;
 
     BOOL bIsMe = (strSender.CompareNoCase(m_strUsername) == 0);
-
-    // Put pointer to the end of the text
     LONG nLen = m_richChat.GetTextLength();
     m_richChat.SetSel(nLen, nLen);
 
-    // Me -> Right; Other -> Left
     PARAFORMAT2 pf;
     ZeroMemory(&pf, sizeof(PARAFORMAT2));
     pf.cbSize = sizeof(PARAFORMAT2);
@@ -558,7 +521,6 @@ void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strCon
     pf.dxRightIndent = 100;
     m_richChat.SetParaFormat(pf);
 
-    // Font + Color (Name + Timestamp)
     CHARFORMAT2 cfHeader;
     ZeroMemory(&cfHeader, sizeof(CHARFORMAT2));
     cfHeader.cbSize = sizeof(CHARFORMAT2);
@@ -568,14 +530,13 @@ void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strCon
     _tcscpy_s(cfHeader.szFaceName, _T("Segoe UI"));
 
     if (bIsMe){
-        cfHeader.crTextColor = RGB(220, 53, 69); // Red
+        cfHeader.crTextColor = RGB(220, 53, 69); // red
     }
     else{
-        cfHeader.crTextColor = RGB(13, 110, 253); // Blue
+        cfHeader.crTextColor = RGB(13, 110, 253); // blue
     }
     m_richChat.SetSelectionCharFormat(cfHeader);
 
-    // Header
     CString strHeader;
     if (bIsMe)
         strHeader.Format(_T("Me [%s]\r\n"), strTime.GetString());
@@ -584,7 +545,6 @@ void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strCon
 
     m_richChat.ReplaceSel(strHeader);
 
-    // Font + Color (Content)
     CHARFORMAT2 cfContent;
     ZeroMemory(&cfContent, sizeof(CHARFORMAT2));
     cfContent.cbSize = sizeof(CHARFORMAT2);
@@ -595,10 +555,8 @@ void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strCon
     _tcscpy_s(cfContent.szFaceName, _T("Segoe UI"));
     m_richChat.SetSelectionCharFormat(cfContent);
 
-    // Insert content + spacing
     CString strBody = strContentOriginal + _T("\r\n\r\n");
     m_richChat.ReplaceSel(strBody);
-
     m_richChat.SetSel(-1, -1);
     m_richChat.SendMessage(EM_SCROLLCARET, 0, 0);
     m_richChat.PostMessage(WM_VSCROLL, SB_BOTTOM, 0);
@@ -606,17 +564,16 @@ void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strCon
 
 BOOL CChatDlg::PreTranslateMessage(MSG* pMsg)
 {
-    // Catch enter event
     if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN){
         CWnd* pEdit = GetDlgItem(IDC_EDIT_MESSAGE);
         if (pEdit && pMsg->hwnd == pEdit->GetSafeHwnd()){
-            // Case 1: Shift + Enter / Ctrl + Enter -> newline
+            // Shift + Enter / Ctrl + Enter -> newline
             if ((GetKeyState(VK_SHIFT) & 0x8000) || (GetKeyState(VK_CONTROL) & 0x8000)){
                 CEdit* pEditCtrl = reinterpret_cast<CEdit*>(pEdit);
                 pEditCtrl->ReplaceSel(_T("\r\n"), TRUE); 
                 return TRUE; 
             }
-            // Case 2: Enter -> Send
+            // Enter -> Send
             else {
                 OnBnClickedBtnSend();
                 return TRUE;

@@ -47,15 +47,13 @@ BOOL CChatAppApp::InitInstance()
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
-        AfxMessageBox(_T("Khởi tạo Winsock thất bại!"));
+        AfxMessageBox(_T("Failed to initialize Winsock!"));
         return FALSE;
     }
 
-    // Open Login dialog
     CLoginDlg loginDlg;
     if (loginDlg.DoModal() == IDOK)
     {
-        // Login success -> pass Socket & Username to CChatDlg
         CChatDlg chatDlg;
         chatDlg.m_hSocket = loginDlg.m_hSocket;            
         chatDlg.m_strUsername = loginDlg.m_strUsername;  

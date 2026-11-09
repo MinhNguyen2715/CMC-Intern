@@ -39,7 +39,6 @@ BOOL CLoginDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
 
-    // Title font
     m_fontTitle.CreatePointFont(140, _T("Segoe UI")); 
     LOGFONT lf;
     m_fontTitle.GetLogFont(&lf);
@@ -47,22 +46,17 @@ BOOL CLoginDlg::OnInitDialog()
     m_fontTitle.DeleteObject();
     m_fontTitle.CreateFontIndirect(&lf);
 
-    // Normal font
     m_fontNormal.CreatePointFont(100, _T("Segoe UI"));
 
-    // Title
     if (GetDlgItem(IDC_STATIC_TITLE))
         GetDlgItem(IDC_STATIC_TITLE)->SetFont(&m_fontTitle);
 
-    // Static labels
     if (GetDlgItem(IDC_STATIC_USERNAME)) GetDlgItem(IDC_STATIC_USERNAME)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_STATIC_PASSWORD)) GetDlgItem(IDC_STATIC_PASSWORD)->SetFont(&m_fontNormal);
 
-    // Edit Controls
     if (GetDlgItem(IDC_EDIT_USERNAME)) GetDlgItem(IDC_EDIT_USERNAME)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_EDIT_PASSWORD)) GetDlgItem(IDC_EDIT_PASSWORD)->SetFont(&m_fontNormal);
 
-    // Buttons
     if (GetDlgItem(IDC_BTN_LOGIN)) GetDlgItem(IDC_BTN_LOGIN)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_BTN_REGISTER)) GetDlgItem(IDC_BTN_REGISTER)->SetFont(&m_fontNormal);
 
@@ -125,19 +119,16 @@ void CLoginDlg::OnBnClickedBtnLogin()
     std::string userA = CW2A(strUser.GetString(), CP_UTF8);
     std::string passA = CW2A(strPass.GetString(), CP_UTF8);
 
-    // Check username + password
     if (!Utils::IsValidUsername(userA) || !Utils::IsValidPassword(passA)){
         AfxMessageBox(_T("Wrong username or password!"),MB_OK | MB_ICONWARNING);
         return;
     }
 
-    // Connect to server
     if (!ConnectToServer()){
         AfxMessageBox(_T("Cannot connect to ChatAppService!"));
         return;
     }
 
-    // Send JSON request login
     json req = {
         {"action", "login"},
         {"data", {
@@ -148,7 +139,6 @@ void CLoginDlg::OnBnClickedBtnLogin()
     std::string strReq = req.dump();
     send(m_hSocket, strReq.c_str(), static_cast<int>(strReq.length()) + 1, 0);
 
-    // Receive JSON reply
     char szBuf[1024] = { 0 };
     int nRecv = recv(m_hSocket, szBuf, sizeof(szBuf) - 1, 0);
     if (nRecv > 0){
