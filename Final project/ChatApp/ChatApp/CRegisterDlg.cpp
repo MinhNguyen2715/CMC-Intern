@@ -31,6 +31,7 @@ void CRegisterDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CRegisterDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SUBMIT_REGISTER, &CRegisterDlg::OnBnClickedBtnSubmitRegister)
+    ON_BN_CLICKED(IDC_BTN_RETURN, &CRegisterDlg::OnBnClickedBtnReturn)
 END_MESSAGE_MAP()
 
 // CRegisterDlg message handlers
@@ -166,4 +167,9 @@ void CRegisterDlg::OnBnClickedBtnSubmitRegister()
     else {
         AfxMessageBox(CA2T(serverMsg.c_str()));
     }
+}
+
+void CRegisterDlg::OnBnClickedBtnReturn()
+{
+    EndDialog(IDCANCEL);
 }

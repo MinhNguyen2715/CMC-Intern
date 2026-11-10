@@ -65,6 +65,8 @@ BOOL CLoginDlg::OnInitDialog()
 
 void CLoginDlg::OnBnClickedBtnRegister()
 {
+    ShowWindow(SW_HIDE);
+
     CRegisterDlg regDlg;
     if (regDlg.DoModal() == IDOK){
         AfxMessageBox(_T("Account created succesfully!\nLogin to continue"), MB_OK | MB_ICONINFORMATION);
@@ -74,6 +76,8 @@ void CLoginDlg::OnBnClickedBtnRegister()
         CWnd* pPass = GetDlgItem(IDC_EDIT_PASSWORD);
         if (pPass) pPass->SetFocus();
     }
+
+    ShowWindow(SW_SHOW);
 }
 
 bool CLoginDlg::ConnectToServer()

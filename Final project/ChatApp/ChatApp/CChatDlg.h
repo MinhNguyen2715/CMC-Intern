@@ -27,17 +27,15 @@ protected:
     virtual void OnCancel();
     virtual void OnOK();
 
-    // UI Control
-    CListCtrl  m_listUser;      // IDC_LIST_USER
-    CRichEditCtrl  m_richChat;  // IDC_LIST_CHAT 
-    CImageList m_imgListUser;   // Icon / Avatar
+    CListCtrl  m_listUser;     
+    CRichEditCtrl  m_richChat;  
+    CImageList m_imgListUser;   
     CFont m_fontUI;
 
-    CString    m_strSelectedUser;
-    HANDLE     m_hRecvThread;
-    BOOL       m_bRunning;
+    CString m_strSelectedUser;
+    HANDLE m_hRecvThread;
+    BOOL m_bRunning;
 
-    // Event Handlers
     afx_msg void OnNMClickListUser(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnBnClickedBtnSend();                              
     afx_msg LRESULT OnRecvJsonMessage(WPARAM wParam, LPARAM lParam);
@@ -46,13 +44,11 @@ protected:
 
 private:
     void InitUserListControl();
-    // void InitChatListControl();
     void ToggleChatUI(BOOL bShow);  
     void RequestUserList();
     void RequestChatHistory(const CString& withUser);
     void UpdateUserLastMessage(const CString& strUser, const CString& strMsg, const CString& strTime);
     void AppendChatMessage(const CString& strSender, const CString& strContentOriginal, const CString& strTime);
-    // void WrapMessageToLines(CDC* pDC, const CString& strInput, int nMaxWidth, CStringArray& outLines);
     CString FormatTimestamp(int64_t ts);           
     CString FormatUserListTimestamp(int64_t ts);   
 

@@ -7,13 +7,17 @@
 #define IDD_LOGIN_DLG                   129
 #define IDD_CHAT_DLG                    131
 #define IDD_REGISTER_DLG                133
-#define IDB_PNG_ORANGE                  137
-#define IDB_PNG_RED                     138
-#define IDB_PNG_YELLOW                  139
-#define IDB_PNG_GREEN                   141
-#define IDB_PNG_BLUE                    142
 #define IDB_PNG1                        147
 #define IDB_PNG_ADMIN                   147
+#define IDB_PNG2                        148
+#define IDB_PNG3                        149
+#define IDB_PNG4                        150
+#define IDB_PNG5                        151
+#define IDB_PNG6                        152
+#define IDB_PNG7                        153
+#define IDB_PNG8                        154
+#define IDB_PNG9                        155
+#define IDB_PNG10                       156
 #define IDC_EDIT_USERNAME               1000
 #define IDC_EDIT_PASSWORD               1003
 #define IDC_BTN_REGISTER                1004
@@ -40,7 +44,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        148
+#define _APS_NEXT_RESOURCE_VALUE        157
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101

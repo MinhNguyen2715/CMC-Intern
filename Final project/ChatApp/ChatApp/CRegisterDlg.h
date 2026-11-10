@@ -28,4 +28,6 @@ private:
     bool ConnectAndRegister(const std::string& username, const std::string& password, std::string& outMsg);
     CFont m_fontTitle;
     CFont m_fontNormal;
+public:
+    afx_msg void OnBnClickedBtnReturn();
 };

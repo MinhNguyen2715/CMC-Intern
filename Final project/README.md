@@ -1,12 +1,14 @@
 # Final Project
 
 ## 1. Test account
-- Admin: 
-    - Username: admin123
-    - Password: admin123@
-- Each {colour}:
-    - Username: {x}colour
-    - Password: {x}colour@123
+- Adam1234 / Adam1234@
+- Betty1234
+- Charlie1234
+- David1234
+- Emma1234
+- Frank1234
+- Gemma1234
+- Harry1234
 
 
 ## 2. Table Schemas

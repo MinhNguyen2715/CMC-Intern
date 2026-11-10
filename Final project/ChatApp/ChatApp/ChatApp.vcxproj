@@ -189,7 +189,6 @@
     <ClInclude Include="..\ChatAppService\sqlite3.h" />
     <ClInclude Include="CChatDlg.h" />
     <ClInclude Include="ChatApp.h" />
-    <ClInclude Include="ChatAppDlg.h" />
     <ClInclude Include="CLoginDlg.h" />
     <ClInclude Include="CRegisterDlg.h" />
     <ClInclude Include="framework.h" />
@@ -208,7 +207,6 @@
     </ClCompile>
     <ClCompile Include="CChatDlg.cpp" />
     <ClCompile Include="ChatApp.cpp" />
-    <ClCompile Include="ChatAppDlg.cpp" />
     <ClCompile Include="CLoginDlg.cpp" />
     <ClCompile Include="CRegisterDlg.cpp" />
     <ClCompile Include="md5.cpp">
@@ -231,13 +229,17 @@
     <None Include="res\ChatApp.rc2" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\..\..\..\Downloads\gamer.png" />
+    <Image Include="..\..\..\..\..\Downloads\hacker.png" />
+    <Image Include="..\..\..\..\..\Downloads\man (1).png" />
+    <Image Include="..\..\..\..\..\Downloads\man (2).png" />
+    <Image Include="..\..\..\..\..\Downloads\man.png" />
+    <Image Include="..\..\..\..\..\Downloads\woman (1).png" />
+    <Image Include="..\..\..\..\..\Downloads\woman (2).png" />
+    <Image Include="..\..\..\..\..\Downloads\woman (3).png" />
+    <Image Include="..\..\..\..\..\Downloads\woman.png" />
     <Image Include="res\admin.png" />
-    <Image Include="res\blue.png" />
     <Image Include="res\ChatApp.ico" />
-    <Image Include="res\green.png" />
-    <Image Include="res\orange.png" />
-    <Image Include="res\red.png" />
-    <Image Include="res\yellow.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

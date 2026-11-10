@@ -7,11 +7,9 @@
 #ifndef PCH_H
 #define PCH_H
 
-// add headers that you want to pre-compile here
 #include "framework.h"
 #include "json.hpp"
 #include "sqlite3.h"
 #include "md5.h"
-// using json = nlohmann::json;
 
 #endif //PCH_H

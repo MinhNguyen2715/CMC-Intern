@@ -3,7 +3,6 @@
 #include "pch.h"
 #include "framework.h"
 #include "ChatApp.h"
-#include "ChatAppDlg.h"
 #include "CLoginDlg.h"
 #include "CChatDlg.h"
 #ifdef _DEBUG

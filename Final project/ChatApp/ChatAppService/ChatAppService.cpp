@@ -482,7 +482,6 @@ DWORD WINAPI ClientWorkerThread(LPVOID lpParam)
                     }
                 }
             }
-            ZeroMemory(szChunk, sizeof(szChunk));
         }
         else
         {

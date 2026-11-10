@@ -18,9 +18,6 @@
     <ClInclude Include="ChatApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ChatAppDlg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -59,9 +56,6 @@
     <ClCompile Include="ChatApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ChatAppDlg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -95,22 +89,34 @@
     <Image Include="res\ChatApp.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="res\orange.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="res\red.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="res\yellow.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="res\blue.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="res\green.png">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="res\admin.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\Downloads\gamer.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\Downloads\hacker.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\Downloads\man (1).png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\Downloads\man (2).png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\Downloads\man.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\Downloads\woman (1).png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\Downloads\woman (2).png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\Downloads\woman (3).png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\..\..\..\..\Downloads\woman.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

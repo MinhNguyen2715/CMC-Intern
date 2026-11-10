@@ -44,41 +44,28 @@ BOOL CChatDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
 
-    // Font
     m_fontUI.CreatePointFont(120, _T("Segoe UI"));
-
     m_listUser.SetFont(&m_fontUI);
     m_richChat.SetFont(&m_fontUI);
+    m_richChat.SendMessage(EM_SETTARGETDEVICE, 0, 0); // word wrapping 
+    if (GetDlgItem(IDC_EDIT_MESSAGE)) GetDlgItem(IDC_EDIT_MESSAGE)->SetFont(&m_fontUI);
 
-    m_richChat.SendMessage(EM_SETTARGETDEVICE, 0, 0);
-
-    if (GetDlgItem(IDC_EDIT_MESSAGE))
-        GetDlgItem(IDC_EDIT_MESSAGE)->SetFont(&m_fontUI);
-
-    if (GetDlgItem(IDC_BTN_SEND))
-        GetDlgItem(IDC_BTN_SEND)->SetFont(&m_fontUI);
-
+    if (GetDlgItem(IDC_BTN_SEND)) GetDlgItem(IDC_BTN_SEND)->SetFont(&m_fontUI);
     ModifyStyle(0, WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU | WS_THICKFRAME);
     ModifyStyleEx(0, WS_EX_APPWINDOW);
     SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-    // Set Wwindow title
     CString strTitle;
     strTitle.Format(_T("ChatApp - [%s]"), m_strUsername.GetString());
     SetWindowText(strTitle);
 
-    // List control config
     InitUserListControl();
-
-    // Hide chat view
     ToggleChatUI(FALSE);
 
     m_bRunning = TRUE;
     m_hRecvThread = CreateThread(NULL, 0, ReceiverThreadProc, this, 0, NULL);
 
-    // Load users list
     RequestUserList();
-
     ShowWindow(SW_SHOWMAXIMIZED);
 
     return TRUE;
@@ -89,28 +76,23 @@ void CChatDlg::OnSize(UINT nType, int cx, int cy)
     CDialogEx::OnSize(nType, cx, cy);
 
     if (nType == SIZE_MINIMIZED || cx <= 0 || cy <= 0 || !::IsWindow(m_hWnd)) return;
-
     int margin = 10;        
     int spacing = 10;       
     int inputHeight = 60;   
 
-    // List User: 25% width
-    int leftWidth = static_cast<int>(cx * 0.25);
+    int leftWidth = static_cast<int>(cx * 0.30);
     if (leftWidth < 300) leftWidth = 300;
-
     int rightWidth = cx - leftWidth - (margin * 2) - spacing;
     int chatHeight = cy - inputHeight - (margin * 2) - spacing;
 
-    // List user
     if (m_listUser.GetSafeHwnd() && ::IsWindow(m_listUser.GetSafeHwnd()))
     {
         m_listUser.MoveWindow(margin, margin, leftWidth, cy - (margin * 2));
 
-        int timeColWidth = 100;
-        int userColWidth = 160;
+        int timeColWidth = 130;
+        int userColWidth = 180;
         int msgColWidth = leftWidth - userColWidth - timeColWidth - 8;
         if (msgColWidth < 50) msgColWidth = 50;
-
         m_listUser.SetColumnWidth(0, userColWidth);  
         m_listUser.SetColumnWidth(1, msgColWidth);   
         m_listUser.SetColumnWidth(2, timeColWidth);  
@@ -145,15 +127,13 @@ void CChatDlg::OnSize(UINT nType, int cx, int cy)
 void CChatDlg::ToggleChatUI(BOOL bShow)
 {
     if (!::IsWindow(m_hWnd)) return;
-
     int nCmdShow = bShow ? SW_SHOW : SW_HIDE;
-
-    if (GetDlgItem(IDC_LIST_CHAT))     GetDlgItem(IDC_LIST_CHAT)->ShowWindow(nCmdShow);
-    if (GetDlgItem(IDC_EDIT_MESSAGE))  GetDlgItem(IDC_EDIT_MESSAGE)->ShowWindow(nCmdShow);
-    if (GetDlgItem(IDC_BTN_SEND))      GetDlgItem(IDC_BTN_SEND)->ShowWindow(nCmdShow);
+    if (GetDlgItem(IDC_LIST_CHAT)) GetDlgItem(IDC_LIST_CHAT)->ShowWindow(nCmdShow);
+    if (GetDlgItem(IDC_EDIT_MESSAGE)) GetDlgItem(IDC_EDIT_MESSAGE)->ShowWindow(nCmdShow);
+    if (GetDlgItem(IDC_BTN_SEND)) GetDlgItem(IDC_BTN_SEND)->ShowWindow(nCmdShow);
 }
 
-bool LoadPNGFromResource(CImage& img, UINT nID)
+bool LoadPNG(CImage& img, UINT nID)
 {
     HINSTANCE hInst = AfxGetInstanceHandle();
     HRSRC hResource = FindResource(hInst, MAKEINTRESOURCE(nID), _T("PNG"));
@@ -168,15 +148,14 @@ bool LoadPNGFromResource(CImage& img, UINT nID)
 
     HGLOBAL hBuffer = GlobalAlloc(GMEM_MOVEABLE, dwSize);
     if (!hBuffer) return false;
-
     LPVOID pBuffer = GlobalLock(hBuffer);
     if (pBuffer)
     {
         CopyMemory(pBuffer, pData, dwSize);
         GlobalUnlock(hBuffer);
-
         IStream* pStream = NULL;
         if (SUCCEEDED(CreateStreamOnHGlobal(hBuffer, TRUE, &pStream)))
+
         {
             img.Load(pStream);
             pStream->Release();
@@ -185,6 +164,16 @@ bool LoadPNGFromResource(CImage& img, UINT nID)
     }
     GlobalFree(hBuffer);
     return false;
+}
+
+BOOL CALLBACK EnumAvatar(HMODULE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG_PTR lParam)
+{
+    std::vector<UINT>* pResourceIDs = reinterpret_cast<std::vector<UINT>*>(lParam);
+    if (IS_INTRESOURCE(lpszName))
+    {
+        pResourceIDs->push_back(static_cast<UINT>(reinterpret_cast<ULONG_PTR>(lpszName)));
+    }
+    return TRUE;
 }
 
 void CChatDlg::InitUserListControl()
@@ -198,14 +187,13 @@ void CChatDlg::InitUserListControl()
     m_listUser.InsertColumn(2, _T("Time"), LVCFMT_RIGHT, 65);
     m_imgListUser.Create(48, 48, ILC_COLOR32 | ILC_MASK, 5, 5);
 
-    std::vector<UINT> avatarResIDs = {
-        IDB_PNG_RED,
-        IDB_PNG_BLUE,
-        IDB_PNG_YELLOW,
-        IDB_PNG_GREEN,
-        IDB_PNG_ORANGE,
-        IDB_PNG_ADMIN
-    };
+    std::vector<UINT> avatarResIDs;
+    EnumResourceNames(
+        AfxGetInstanceHandle(),
+        _T("PNG"),
+        EnumAvatar,
+        reinterpret_cast<LONG_PTR>(&avatarResIDs)
+    );
 
     HINSTANCE hInst = AfxGetInstanceHandle();
     CWindowDC dcScreen(NULL);
@@ -214,11 +202,8 @@ void CChatDlg::InitUserListControl()
     {
         CImage img;
         bool bLoaded = false;
-        if (LoadPNGFromResource(img, avatarResIDs[i]))
-        {
-            bLoaded = true;
-        }
-
+        if (LoadPNG(img, avatarResIDs[i])) bLoaded = true;
+    
         if (bLoaded)
         {
             CDC dcMem;
@@ -235,25 +220,11 @@ void CChatDlg::InitUserListControl()
         {
             HICON hDefault = ::LoadIcon(NULL, IDI_APPLICATION);
             m_imgListUser.Add(hDefault);
+            ::DestroyIcon(hDefault);
         }
     }
 
     m_listUser.SetImageList(&m_imgListUser, LVSIL_SMALL);
-}
-
-int GetAvatarIndexByUsername(const CString& username)
-{
-    CString strUpper = username;
-    strUpper.MakeUpper();
-
-    if (strUpper.Find(_T("RED")) != -1)    return 0; 
-    if (strUpper.Find(_T("BLUE")) != -1)   return 1; 
-    if (strUpper.Find(_T("YELLOW")) != -1) return 2; 
-    if (strUpper.Find(_T("GREEN")) != -1)  return 3; 
-    if (strUpper.Find(_T("ORANGE")) != -1) return 4; 
-    if (strUpper.Find(_T("ADMIN")) != -1) return 5;
-
-    return 0; // Default avatar
 }
 
 void CChatDlg::OnNMClickListUser(NMHDR* pNMHDR, LRESULT* pResult)
@@ -294,7 +265,6 @@ void CChatDlg::OnBnClickedBtnSend()
     CString strMsg;
     GetDlgItemText(IDC_EDIT_MESSAGE, strMsg);
     strMsg.Trim();
-
     if (strMsg.IsEmpty()) return;
 
     json req = {
@@ -368,10 +338,14 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
             if (m_listUser.GetSafeHwnd() && ::IsWindow(m_listUser.GetSafeHwnd())){
                 m_listUser.DeleteAllItems();
                 auto users = res["data"].value("users", std::vector<std::string>());
+
+                int nTotalAvatars = m_imgListUser.GetImageCount();
+                if (nTotalAvatars <= 0) nTotalAvatars = 1;
+
                 int index = 0;
                 for (const auto& user : users){
                     CString strUser(CA2T(user.c_str(), CP_UTF8));
-                    int avatarIndex = GetAvatarIndexByUsername(strUser);
+                    int avatarIndex = index % nTotalAvatars;
                     m_listUser.InsertItem(index, strUser, avatarIndex);
                     m_listUser.SetItemText(index, 1, _T(""));
                     m_listUser.SetItemText(index, 2, _T(""));
@@ -441,6 +415,7 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
     delete pRawJson;
     return 0;
 }
+
 void CChatDlg::OnCancel()
 {
     m_bRunning = FALSE;
@@ -532,16 +507,16 @@ void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strCon
     if (bIsMe){
         cfHeader.crTextColor = RGB(220, 53, 69); // red
     }
-    else{
+    else {
         cfHeader.crTextColor = RGB(13, 110, 253); // blue
     }
     m_richChat.SetSelectionCharFormat(cfHeader);
 
     CString strHeader;
-    if (bIsMe)
+    if (bIsMe) {
         strHeader.Format(_T("Me [%s]\r\n"), strTime.GetString());
-    else
-        strHeader.Format(_T("%s [%s]\r\n"), strSender.GetString(), strTime.GetString());
+    }
+    else { strHeader.Format(_T("%s [%s]\r\n"), strSender.GetString(), strTime.GetString()); }
 
     m_richChat.ReplaceSel(strHeader);
 
