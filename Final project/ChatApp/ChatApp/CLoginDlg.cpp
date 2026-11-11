@@ -45,18 +45,13 @@ BOOL CLoginDlg::OnInitDialog()
     lf.lfWeight = FW_BOLD; 
     m_fontTitle.DeleteObject();
     m_fontTitle.CreateFontIndirect(&lf);
-
     m_fontNormal.CreatePointFont(100, _T("Segoe UI"));
 
-    if (GetDlgItem(IDC_STATIC_TITLE))
-        GetDlgItem(IDC_STATIC_TITLE)->SetFont(&m_fontTitle);
-
+    if (GetDlgItem(IDC_STATIC_TITLE)) GetDlgItem(IDC_STATIC_TITLE)->SetFont(&m_fontTitle);
     if (GetDlgItem(IDC_STATIC_USERNAME)) GetDlgItem(IDC_STATIC_USERNAME)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_STATIC_PASSWORD)) GetDlgItem(IDC_STATIC_PASSWORD)->SetFont(&m_fontNormal);
-
     if (GetDlgItem(IDC_EDIT_USERNAME)) GetDlgItem(IDC_EDIT_USERNAME)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_EDIT_PASSWORD)) GetDlgItem(IDC_EDIT_PASSWORD)->SetFont(&m_fontNormal);
-
     if (GetDlgItem(IDC_BTN_LOGIN)) GetDlgItem(IDC_BTN_LOGIN)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_BTN_REGISTER)) GetDlgItem(IDC_BTN_REGISTER)->SetFont(&m_fontNormal);
 

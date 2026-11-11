@@ -65,30 +65,19 @@ bool DatabaseManager::InitDatabase(const std::string& dbPath) {
 bool DatabaseManager::RegisterUser(const std::string& username, const std::string& password) {
     std::lock_guard<std::mutex> lock(m_dbMutex);
     if (!m_pDB) return false;
-    // Prepared statement
     std::string sql = "INSERT INTO Users (username, password) VALUES (?, ?);";
     sqlite3_stmt* stmt = nullptr;
 
-    
     if (sqlite3_prepare_v2(m_pDB, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
         return false;
 
-    // MD5 hash before storing
-    std::string md5Password = Utils::GetMD5Hash(password);
-
-    // Insert safe string to the prepared statement
     sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, md5Password.c_str(), -1, SQLITE_TRANSIENT);
-
-    // Execute
+    sqlite3_bind_text(stmt, 2, password.c_str(), -1, SQLITE_TRANSIENT);
     bool bSuccess = (sqlite3_step(stmt) == SQLITE_DONE);
-
-    // Destroy prepared statement
     sqlite3_finalize(stmt);
     return bSuccess;
 }
 
-// Login authenticate
 bool DatabaseManager::AuthenticateUser(const std::string& username, const std::string& password) {
     std::lock_guard<std::mutex> lock(m_dbMutex);
     if (!m_pDB) return false;
@@ -99,18 +88,14 @@ bool DatabaseManager::AuthenticateUser(const std::string& username, const std::s
     if (sqlite3_prepare_v2(m_pDB, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK)
         return false;
 
-    // MD5 hash
-    std::string md5Password = Utils::GetMD5Hash(password);
-
     sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, md5Password.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, password.c_str(), -1, SQLITE_TRANSIENT);
 
     bool bAuth = (sqlite3_step(stmt) == SQLITE_ROW);
     sqlite3_finalize(stmt);
     return bAuth;
 }
 
-// Store messages
 bool DatabaseManager::SaveMessage(const std::string& sender, const std::string& receiver, const std::string& content, int64_t timestamp) {
     std::lock_guard<std::mutex> lock(m_dbMutex);
     if (!m_pDB) return false;
@@ -131,7 +116,6 @@ bool DatabaseManager::SaveMessage(const std::string& sender, const std::string& 
     return bSuccess;
 }
 
-// Users list
 std::vector<std::string> DatabaseManager::GetAllUsers(const std::string& currentUsername) {
     std::lock_guard<std::mutex> lock(m_dbMutex);
 
@@ -154,7 +138,6 @@ std::vector<std::string> DatabaseManager::GetAllUsers(const std::string& current
     return users;
 }
 
-// Chat history
 std::vector<ChatMessage> DatabaseManager::GetChatHistory(const std::string& user1, const std::string& user2) {
     std::lock_guard<std::mutex> lock(m_dbMutex);
 

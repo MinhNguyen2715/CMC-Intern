@@ -3,21 +3,18 @@
 
 using json = nlohmann::json;
 
-// Global service variables
 SERVICE_STATUS        g_SvcStatus;
 SERVICE_STATUS_HANDLE g_SvcStatusHandle = NULL;
 HANDLE                g_hServerThread = NULL;
 BOOL                  g_bRunning = FALSE;
 SOCKET                g_listenSocket = INVALID_SOCKET;
 
-// Thread-safe active sessions management (Username -> SOCKET)
 std::map<std::string, SOCKET> g_activeUsers;
 std::vector<SOCKET>           g_clientSockets; 
 CRITICAL_SECTION              g_csClients;
 
 DatabaseManager               g_dbManager;
 
-// Service main entry point
 VOID WINAPI SvcMain(DWORD dwArgc, LPTSTR* lpszArgv)
 {
     g_SvcStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, SvcCtrlHandler);
@@ -29,10 +26,8 @@ VOID WINAPI SvcMain(DWORD dwArgc, LPTSTR* lpszArgv)
 
     ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 3000);
 
-    // Initialize critical section for thread-safe socket & session management
     InitializeCriticalSection(&g_csClients);
 
-    // Initialize Winsock library
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
@@ -41,7 +36,6 @@ VOID WINAPI SvcMain(DWORD dwArgc, LPTSTR* lpszArgv)
         return;
     }
 
-    // Initialize SQLite Database
     if (!g_dbManager.InitDatabase(GetDatabaseFullPath()))
     {
         WSACleanup();
@@ -62,7 +56,6 @@ VOID WINAPI SvcMain(DWORD dwArgc, LPTSTR* lpszArgv)
         g_hServerThread = NULL;
     }
 
-    // Clean up all active sockets when terminate
     EnterCriticalSection(&g_csClients);
     std::vector<SOCKET> socketsToClose = g_clientSockets;
     g_clientSockets.clear();
@@ -82,7 +75,6 @@ VOID WINAPI SvcMain(DWORD dwArgc, LPTSTR* lpszArgv)
     ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
 }
 
-// Service control handler callback
 VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
 {
     switch (dwCtrl)
@@ -92,7 +84,6 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
         ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 5000);
         g_bRunning = FALSE;
 
-        // Close listening socket -> unblock accept()
         if (g_listenSocket != INVALID_SOCKET)
         {
             closesocket(g_listenSocket);
@@ -105,7 +96,7 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
     }
 }
 
-// Report status update to Service Control Manager
+
 VOID ReportSvcStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHint)
 {
     static DWORD dwCheckPoint = 1;
@@ -122,10 +113,8 @@ VOID ReportSvcStatus(DWORD dwCurrentState, DWORD dwWin32ExitCode, DWORD dwWaitHi
     SetServiceStatus(g_SvcStatusHandle, &g_SvcStatus);
 }
 
-// Main thread listening for incoming TCP client connections
 DWORD WINAPI TcpServerThread(LPVOID lpParam)
 {
-    // Create a listening port at PORT_CHAT
     g_listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (g_listenSocket == INVALID_SOCKET) return 0;
 
@@ -142,7 +131,6 @@ DWORD WINAPI TcpServerThread(LPVOID lpParam)
         return 0;
     }
 
-    // Listen for new connection
     while (g_bRunning)
     {
         sockaddr_in clientAddr = { 0 };
@@ -151,7 +139,6 @@ DWORD WINAPI TcpServerThread(LPVOID lpParam)
         SOCKET clientSocket = accept(g_listenSocket, (SOCKADDR*)&clientAddr, &nAddrLen);
         if (clientSocket != INVALID_SOCKET)
         {
-            // Add new client socket 
             EnterCriticalSection(&g_csClients);
             g_clientSockets.push_back(clientSocket);
             LeaveCriticalSection(&g_csClients);
@@ -161,7 +148,7 @@ DWORD WINAPI TcpServerThread(LPVOID lpParam)
             HANDLE hClientThread = CreateThread(NULL, 0, ClientWorkerThread, pClientSock, 0, NULL);
             if (hClientThread)
             {
-                CloseHandle(hClientThread); // Thread runs independently
+                CloseHandle(hClientThread);  
             }
             else
             {
@@ -172,14 +159,13 @@ DWORD WINAPI TcpServerThread(LPVOID lpParam)
         }
         else
         {
-            break; // Socket closed 
+            break; 
         }
     }
 
     return 0;
 }
 
-// Process JSON payloads received from connected clients
 std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, std::string& outAuthenticatedUser)
 {
     json response;
@@ -260,7 +246,6 @@ std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, 
                     g_activeUsers.erase(outAuthenticatedUser);
                 }
 
-                // Bind active username to client socket session
                 g_activeUsers[username] = clientSocket;
                 outAuthenticatedUser = username;
                 LeaveCriticalSection(&g_csClients);
@@ -303,7 +288,6 @@ std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, 
                     return "";
                 }
 
-                // Save message into database
                 g_dbManager.SaveMessage(outAuthenticatedUser, toUser, content, timestamp);
 
                 // Check if target recipient is online
@@ -318,7 +302,6 @@ std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, 
 
                 if (targetSocket != INVALID_SOCKET)
                 {
-                    // Send message to destination client
                     json forwardMsg = {
                         {"action", "receive_msg"},
                         {"data", {
@@ -424,18 +407,13 @@ std::string ProcessJsonRequest(const std::string& rawJson, SOCKET clientSocket, 
     return response.dump();   
 }
 
-// Remove client socket and active user mapping
 void RemoveClientSession(SOCKET clientSocket, const std::string& username)
 {
     EnterCriticalSection(&g_csClients);
-
-    // Remove from active authenticated users
     if (!username.empty())
     {
         g_activeUsers.erase(username);
     }
-
-    // Remove from socket list
     for (auto it = g_clientSockets.begin(); it != g_clientSockets.end(); ++it)
     {
         if (*it == clientSocket)
@@ -444,11 +422,9 @@ void RemoveClientSession(SOCKET clientSocket, const std::string& username)
             break;
         }
     }
-
     LeaveCriticalSection(&g_csClients);
 }
 
-// Worker thread 
 DWORD WINAPI ClientWorkerThread(LPVOID lpParam)
 {
     SOCKET clientSocket = *(reinterpret_cast<SOCKET*>(lpParam));
@@ -463,10 +439,9 @@ DWORD WINAPI ClientWorkerThread(LPVOID lpParam)
         int nBytesRecv = recv(clientSocket, szChunk, sizeof(szChunk) - 1, 0);
         if (nBytesRecv > 0)
         {
-            szChunk[nBytesRecv] = '\0'; // assign to avoid error
+
             accumulatedBuffer.append(szChunk, nBytesRecv);
 
-            // Process full JSON messages delimited by null-terminator '\0'
             size_t nullPos = 0;
             while ((nullPos = accumulatedBuffer.find('\0')) != std::string::npos)
             {
@@ -485,11 +460,9 @@ DWORD WINAPI ClientWorkerThread(LPVOID lpParam)
         }
         else
         {
-            break; // Connection closed / socket error
+            break;
         }
     }
-
-    // Cleanup session and close socket 
     RemoveClientSession(clientSocket, currentUsername);
 
     shutdown(clientSocket, SD_BOTH);
@@ -497,7 +470,6 @@ DWORD WINAPI ClientWorkerThread(LPVOID lpParam)
     return 0;
 }
 
-// Install Windows Service
 BOOL InstallService()
 {
     TCHAR szPath[MAX_PATH];
@@ -529,7 +501,6 @@ BOOL InstallService()
     return TRUE;
 }
 
-// Uninstall Windows Service
 BOOL UninstallService()
 {
     SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
@@ -549,7 +520,6 @@ BOOL UninstallService()
     return bResult;
 }
 
-// Set database path in the same folder as .exe file
 std::string GetDatabaseFullPath()
 {
     char szPath[MAX_PATH] = { 0 };
@@ -564,7 +534,6 @@ std::string GetDatabaseFullPath()
     return DB_FILE_PATH;
 }
 
-// Application entry point for service startup + CLI argument parsing
 int _tmain(int argc, TCHAR* argv[])
 {
     if (argc > 1)

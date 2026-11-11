@@ -2,7 +2,7 @@
 #include <atlimage.h>
 
 // CChatDlg dialog
-#define WM_RECV_JSON (WM_USER + 101)
+#define WM_RECV_JSON (WM_APP + 1)
 
 class CChatDlg : public CDialogEx
 {

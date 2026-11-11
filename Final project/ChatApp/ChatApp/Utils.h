@@ -3,7 +3,7 @@
 #include <regex>
 #include "md5.h"
 
-#define SERVER_IP   "192.168.1.19"
+#define SERVER_IP   "10.248.35.206"
 #define SERVER_PORT "9999"
 
 namespace Utils

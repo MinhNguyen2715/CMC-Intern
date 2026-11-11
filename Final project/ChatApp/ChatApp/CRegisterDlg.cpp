@@ -45,20 +45,15 @@ BOOL CRegisterDlg::OnInitDialog()
     lf.lfWeight = FW_BOLD;
     m_fontTitle.DeleteObject();
     m_fontTitle.CreateFontIndirect(&lf);
-
     m_fontNormal.CreatePointFont(100, _T("Segoe UI"));
 
-    if (GetDlgItem(IDC_STATIC_REG_TITLE))
-        GetDlgItem(IDC_STATIC_REG_TITLE)->SetFont(&m_fontTitle);
-
+    if (GetDlgItem(IDC_STATIC_REG_TITLE)) GetDlgItem(IDC_STATIC_REG_TITLE)->SetFont(&m_fontTitle);
     if (GetDlgItem(IDC_STATIC_REG_USER)) GetDlgItem(IDC_STATIC_REG_USER)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_STATIC_REG_PASS)) GetDlgItem(IDC_STATIC_REG_PASS)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_STATIC_REG_CONFIRM)) GetDlgItem(IDC_STATIC_REG_CONFIRM)->SetFont(&m_fontNormal);
-
     if (GetDlgItem(IDC_EDIT_REG_USERNAME)) GetDlgItem(IDC_EDIT_REG_USERNAME)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_EDIT_REG_PASSWORD)) GetDlgItem(IDC_EDIT_REG_PASSWORD)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_EDIT_REG_CONFIRM)) GetDlgItem(IDC_EDIT_REG_CONFIRM)->SetFont(&m_fontNormal);
-
     if (GetDlgItem(IDC_BTN_SUBMIT_REGISTER)) GetDlgItem(IDC_BTN_SUBMIT_REGISTER)->SetFont(&m_fontNormal);
     if (GetDlgItem(IDC_BTN_RETURN)) GetDlgItem(IDC_BTN_RETURN)->SetFont(&m_fontNormal);
 
@@ -156,9 +151,10 @@ void CRegisterDlg::OnBnClickedBtnSubmitRegister()
         AfxMessageBox(_T("Passwords do not match!"), MB_OK | MB_ICONWARNING);
         return;
     }
+    std::string hashedPass = Utils::GetMD5Hash(passA);
 
     std::string serverMsg;
-    if (ConnectAndRegister(userA, passA, serverMsg)){
+    if (ConnectAndRegister(userA, hashedPass, serverMsg)){
         m_strUsername = strUser;
         AfxMessageBox(CA2T(serverMsg.c_str()), MB_OK | MB_ICONINFORMATION);
         EndDialog(IDOK); 

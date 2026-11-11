@@ -297,7 +297,6 @@ DWORD WINAPI CChatDlg::ReceiverThreadProc(LPVOID lpParam)
     while (pDlg->m_bRunning && pDlg->m_hSocket != INVALID_SOCKET){
         int nBytesRecv = recv(pDlg->m_hSocket, szChunk, sizeof(szChunk) - 1, 0);
         if (nBytesRecv > 0){
-            szChunk[nBytesRecv] = '\0';
             accumulatedBuffer.append(szChunk, nBytesRecv);
 
             size_t nullPos = 0;
@@ -365,9 +364,7 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
                 auto lastMsg = messages.back();
                 std::string lastContent = lastMsg.value("content", "");
                 int64_t lastTs = lastMsg.value("timestamp", (int64_t)0);
-
                 CString strLastContent(CA2T(lastContent.c_str(), CP_UTF8));
-
                 CString strLastTime = FormatUserListTimestamp(lastTs);
                 UpdateUserLastMessage(strWithUser, strLastContent, strLastTime);
             }
@@ -400,7 +397,6 @@ LRESULT CChatDlg::OnRecvJsonMessage(WPARAM wParam, LPARAM lParam)
 
             CString strFromUser(CA2T(fromUser.c_str(), CP_UTF8));
             CString strContent(CA2T(content.c_str(), CP_UTF8));
-
             CString strTime = FormatTimestamp(ts);
             CString strTimeList = FormatUserListTimestamp(ts);
 
@@ -439,10 +435,15 @@ void CChatDlg::UpdateUserLastMessage(const CString& strUser, const CString& strM
 {
     if (!m_listUser.GetSafeHwnd() || !::IsWindow(m_listUser.GetSafeHwnd())) return;
 
-    for (int i = 0; i < m_listUser.GetItemCount(); ++i){
-        if (m_listUser.GetItemText(i, 0).CompareNoCase(strUser) == 0){
-            m_listUser.SetItemText(i, 1, strMsg); 
-            m_listUser.SetItemText(i, 2, strTime); 
+    CString strPreview = strMsg;
+    strPreview.Replace(_T("\r\n"), _T(" "));
+    strPreview.Replace(_T("\r"), _T(" "));
+    strPreview.Replace(_T("\n"), _T(" "));
+
+    for (int i = 0; i < m_listUser.GetItemCount(); ++i) {
+        if (m_listUser.GetItemText(i, 0).CompareNoCase(strUser) == 0) {
+            m_listUser.SetItemText(i, 1, strPreview);
+            m_listUser.SetItemText(i, 2, strTime);
             break;
         }
     }
@@ -479,8 +480,7 @@ void CChatDlg::OnOK()
 
 void CChatDlg::AppendChatMessage(const CString& strSender, const CString& strContentOriginal, const CString& strTime)
 {
-    if (!m_richChat.GetSafeHwnd() || !::IsWindow(m_richChat.GetSafeHwnd()))
-        return;
+    if (!m_richChat.GetSafeHwnd() || !::IsWindow(m_richChat.GetSafeHwnd())) return;
 
     BOOL bIsMe = (strSender.CompareNoCase(m_strUsername) == 0);
     LONG nLen = m_richChat.GetTextLength();
